@@ -6,10 +6,10 @@ React component on a fixed 1920×1080 canvas.
 
 **The deck is support, not the act.** The talk is ~90 % live terminal demo.
 
-> ### State: clean base — 2 slides
+> ### State: building up — 3 slides
 >
-> The deck was deliberately pruned back to a title and one `/review-mr` slide, and content is
-> being built up again from there. What is here is finished; it is just not finished *talk*.
+> The deck was pruned back to a title and one `/review-mr` slide, and content is being built up
+> again from there. What is here is finished; it is just not finished *talk*.
 > See [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
 
 ## Starting another deck — or adding the next slide?
@@ -65,7 +65,8 @@ the deck and use the **Export** menu in the slide toolbar:
 | # | Page |
 | --- | --- |
 | 01 | Title |
-| 02 | `/review-mr` — five verbs, what it does |
+| 02 | `/review-mr` — reviewing someone else's MR |
+| 03 | `/rework-mr` — answering the review of your own |
 
 There is **no slide furniture at all** — no footer, no page numbers, no running topic marker.
 
@@ -107,7 +108,7 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 
 | Path | What |
 | --- | --- |
-| `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 2 pages, `notes`, `design`, and the background art |
+| `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 3 pages, `notes`, `design`, and the background art |
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
 | `assets/` | brand icons (currently unused — see [`CREDITS.md`](assets/CREDITS.md)) |

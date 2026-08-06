@@ -392,6 +392,23 @@ const ReviewMr: Page = () => (
  * newlines survive but markdown does not — bullets have to be literal characters.
  * The pane scrolls and its font size is adjustable, so a short list is fine.
  */
+// ── 03 · rework-mr ───────────────────────────────────────────────────────────
+
+const ReworkMr: Page = () => (
+  <Shell>
+    <SkillH name="rework-mr" sub="answering the review of your own MR" />
+
+    <div style={{ marginTop: 64 }}>
+      {/* No sub-skills on this one — every aside is prose, so none render as commands. */}
+      <Row label="threads" note="the reviewer's open topics" aside="one list, one plan per MR" />
+      <Row label="grilling" note="every topic argued to a plan first" aside="no code until all are planned" />
+      <Row label="fixing" note="failing test first, then the fix" aside="fixup into the introducing commit" />
+      <Row label="pushing" note="force-push, then a stable diff URL" aside="never a commit link" />
+      <Row label="replies" note="one per thread, in its language" aside="copy or post" />
+    </div>
+  </Shell>
+);
+
 export const notes: (string | undefined)[] = [
   // 01 Title
   [
@@ -406,6 +423,11 @@ export const notes: (string | undefined)[] = [
     '• Start /review-mr !1 — show when done (about 4 min)',
     '• Then /review-mr !2 — for the follow-up workflow',
   ].join('\n'),
+  // 03 rework-mr
+  [
+    '• Hat switch — /rework-mr !3',
+    '• t1 trivial, t2 the real cache bug (keep the grilling short)',
+  ].join('\n'),
 ];
 
 export const meta: SlideMeta = {
@@ -414,4 +436,4 @@ export const meta: SlideMeta = {
   createdAt: '2026-08-05T15:19:53.556Z',
 };
 
-export default [Title, ReviewMr] satisfies Page[];
+export default [Title, ReviewMr, ReworkMr] satisfies Page[];

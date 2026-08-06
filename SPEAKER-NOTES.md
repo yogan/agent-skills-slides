@@ -3,7 +3,7 @@
 Cues only. Same text as the `notes` export in the deck, which is what the presenter window
 shows on `P`. **Edit both if you edit one.**
 
-> **State: clean base.** Two slides — see [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
+> **State: building up.** Three slides — see [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
 
 ## 01 · Title
 
@@ -28,6 +28,13 @@ everything so it cannot stop on a question:
 ```
 /review-mr !1 — generate the explainer first, then seed findings with review-branch,
 then show me the overview and stop. Don't ask me anything before the overview.
+```
+
+## 03 · `/rework-mr`
+
+```
+• Hat switch — /rework-mr !3
+• t1 trivial, t2 the real cache bug (keep the grilling short)
 ```
 
 ## Formatting notes in the presenter pane
