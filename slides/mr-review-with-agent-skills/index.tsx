@@ -203,11 +203,22 @@ const Title: Page = () => (
     >
       Agentic Code Reviews
     </h1>
-    <div style={{ marginTop: 56, fontFamily: MONO, fontSize: 30, color: MUTED, lineHeight: 1.5 }}>
+    <div
+      style={{
+        marginTop: 56,
+        fontFamily: MONO,
+        fontSize: 30,
+        color: MUTED,
+        lineHeight: 1.4,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 22,
+      }}
+    >
       <div>
         Frank Blendinger
         <span style={{ color: DIM, margin: '0 22px' }}>·</span>
-        @yogan
+        <span style={{ color: 'var(--osd-accent)' }}>@</span>yogan
       </div>
       <div>
         Open Source Contributors @ ZAM
