@@ -356,14 +356,15 @@ const Title: Page = () => (
  */
 const REVEAL_CSS = `
 .acr-stage .acr-intro {
-  transition: opacity 260ms ease, transform 260ms ease;
+  transform: translateY(-50%);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
 }
 .acr-stage:has([data-osd-step='revealed']) .acr-intro {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(calc(-50% - 8px));
 }
 @media (prefers-reduced-motion: reduce) {
-  .acr-stage .acr-intro { transition: none; transform: none; }
+  .acr-stage .acr-intro { transition: none; }
 }
 .acr-reveal [data-osd-step] .acr-row,
 .acr-reveal [data-osd-step] .acr-label {
@@ -383,33 +384,40 @@ const REVEAL_CSS = `
 const RevealStyles = () => <style>{REVEAL_CSS}</style>;
 
 /**
- * One-line description of the skill, shown when the page arrives and gone once the first row
+ * Short description of the skill, shown when the page arrives and gone once the first row
  * reveals.
  *
- * Absolutely positioned, for two reasons: it costs no layout, so the rows keep the exact
- * positions they have without it; and it can sit low, roughly at the optical centre of the
- * band the rows will fill, instead of tucked under the heading leaving the lower half of the
- * canvas empty. `top` is measured from the stage, whose own top is the heading.
+ * Absolutely positioned, so it costs no layout and the rows keep the exact positions they
+ * have without it. `top: 50%` centres it on the canvas, because the stage *is* the centred
+ * content block — its own midpoint is the canvas midpoint.
  *
- * It clears the first row's slot (canvas y 452–528 vs this at ~617), so the fade-out and the
- * first row's fade-in never overlap.
+ * The centring transform lives in the stylesheet rather than here: an inline `transform`
+ * outranks a class selector, so the hidden-state rule could never override it.
+ *
+ * Centred, it shares space with the first row's slot, so the out-fade is quick (200ms) —
+ * the sentence is gone before the row settles rather than dissolving through it.
  */
 const Intro = ({ children }: { children: ReactNode }) => (
   <p
     className="acr-intro"
     style={{
       position: 'absolute',
-      top: 370,
+      top: '50%',
       left: 0,
       maxWidth: 1500,
       fontSize: 36,
-      lineHeight: 1.35,
+      lineHeight: 1.45,
       color: MUTED,
       margin: 0,
     }}
   >
     {children}
   </p>
+);
+
+/** The one word in an intro line that names which hat you are wearing. */
+const Hat = ({ children }: { children: ReactNode }) => (
+  <span style={{ color: 'var(--osd-accent)' }}>{children}</span>
 );
 
 /** Wraps the rows so each one reveals on its own `→`. */
@@ -467,8 +475,9 @@ const ReviewMr: Page = () => (
     <Stage>
       <SkillH name="review-mr" />
       <Intro>
-        The reviewer&rsquo;s side: everything from the first read of a branch to the comments
-        you post.
+        Support for you as a <Hat>reviewer</Hat> of a merge request.
+        <br />
+        Explain diff on high level, agentic &amp; human review, tracking of updates.
       </Intro>
 
       {/* Order is the actual chronology of a review: understand it, let the agent find
@@ -519,8 +528,9 @@ const ReworkMr: Page = () => (
     <Stage>
       <SkillH name="rework-mr" />
       <Intro>
-        The author&rsquo;s side: everything from the reviewer&rsquo;s comments to the fixes you
-        push back.
+        Support for you as the <Hat>author</Hat> of a merge request.
+        <br />
+        Discuss findings with agent, grill on solutions, fix step by step.
       </Intro>
 
       {/* No sub-skills on this one — every aside is prose, so none render as commands. */}

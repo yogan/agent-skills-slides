@@ -58,11 +58,16 @@ then gets out of the way. It is hidden with `:has()` on the stage —
 `.acr-stage:has([data-osd-step='revealed']) .acr-intro` — rather than by threading reveal
 state through React.
 
-It is **absolutely positioned**, which buys two things: it costs no layout, so the rows keep
-the exact positions they had before it existed; and it can sit low — roughly at the optical
-centre of the band the rows will fill — instead of tucking under the heading and leaving the
-bottom half of the canvas empty. It also clears the first row's slot, so the fade-out and the
-first row's fade-in never overlap.
+It is **absolutely positioned** and centred on the canvas (`top: 50%`, which lands on the
+canvas midpoint because the stage *is* the centred content block). That costs no layout, so
+the rows keep the exact positions they had before the intro existed, and the page reads as
+balanced on arrival rather than top-heavy with an empty lower half.
+
+Two details that bite: the centring `transform` has to live in the stylesheet, because an
+inline `transform` outranks a class selector and the hidden-state rule could never override
+it; and since a centred intro shares space with the first row's slot, its out-fade is quicker
+than the row's in-fade (200ms vs 320ms) so the sentence is gone before the row settles rather
+than dissolving through it.
 
 `:has()` is Chrome 105+; the deck is presented in Chrome and open-slide's PDF export is
 Chrome-only anyway, so that is not a new constraint.
