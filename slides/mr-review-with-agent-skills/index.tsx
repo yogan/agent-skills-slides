@@ -186,7 +186,9 @@ const Title: Page = () => (
         letterSpacing: '0.02em',
       }}
     >
-      /review-mr - /rework-mr
+      /review-mr
+      <span style={{ color: DIM, margin: '0 18px' }}>·</span>
+      /rework-mr
     </div>
     <h1
       style={{
@@ -202,9 +204,9 @@ const Title: Page = () => (
     </h1>
     <div style={{ marginTop: 56, fontFamily: MONO, fontSize: 30, color: MUTED }}>
       Frank Blendinger
-      <span style={{ color: DIM, margin: '0 22px' }}>/</span>
+      <span style={{ color: DIM, margin: '0 22px' }}>·</span>
       Open Source Contributors @ ZAM
-      <span style={{ color: DIM, margin: '0 22px' }}>/</span>
+      <span style={{ color: DIM, margin: '0 22px' }}>·</span>
       2026-08-06
     </div>
   </Shell>
