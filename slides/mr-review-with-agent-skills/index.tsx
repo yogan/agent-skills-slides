@@ -384,13 +384,29 @@ const RevealStyles = () => <style>{REVEAL_CSS}</style>;
 
 /**
  * One-line description of the skill, shown when the page arrives and gone once the first row
- * reveals. 16 + 41 + 64 = the 121px gap the rows previously had to themselves, so adding it
- * back does not move them.
+ * reveals.
+ *
+ * Absolutely positioned, for two reasons: it costs no layout, so the rows keep the exact
+ * positions they have without it; and it can sit low, roughly at the optical centre of the
+ * band the rows will fill, instead of tucked under the heading leaving the lower half of the
+ * canvas empty. `top` is measured from the stage, whose own top is the heading.
+ *
+ * It clears the first row's slot (canvas y 452–528 vs this at ~617), so the fade-out and the
+ * first row's fade-in never overlap.
  */
 const Intro = ({ children }: { children: ReactNode }) => (
   <p
     className="acr-intro"
-    style={{ fontSize: 34, lineHeight: 1.2, color: MUTED, margin: '16px 0 0' }}
+    style={{
+      position: 'absolute',
+      top: 370,
+      left: 0,
+      maxWidth: 1500,
+      fontSize: 36,
+      lineHeight: 1.35,
+      color: MUTED,
+      margin: 0,
+    }}
   >
     {children}
   </p>
@@ -398,7 +414,7 @@ const Intro = ({ children }: { children: ReactNode }) => (
 
 /** Wraps the rows so each one reveals on its own `→`. */
 const RevealList = ({ children }: { children: ReactNode }) => (
-  <div className="acr-reveal" style={{ marginTop: 64 }}>
+  <div className="acr-reveal" style={{ marginTop: 121 }}>
     <RevealStyles />
     <Steps>{children}</Steps>
   </div>
@@ -406,7 +422,7 @@ const RevealList = ({ children }: { children: ReactNode }) => (
 
 /** Groups heading + intro + rows so `:has()` can see the steps from the intro. */
 const Stage = ({ children }: { children: ReactNode }) => (
-  <div className="acr-stage">{children}</div>
+  <div className="acr-stage" style={{ position: 'relative' }}>{children}</div>
 );
 
 /**

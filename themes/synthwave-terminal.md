@@ -253,7 +253,9 @@ keyboard handling or its reduced-motion fallback:
 
 The same attribute drives the reverse: an intro line that shows on arrival and gets out of the
 way once the content starts, hidden via `:has()` on a shared wrapper so no state has to be
-threaded through React. Keep it in flow while hidden so nothing below it shifts.
+threaded through React. Position it **absolutely** so it costs no layout — the content below
+keeps the position it has without the intro — and place it low, near the optical centre of the
+space that content will fill, rather than tucked under the heading.
 
 ```css
 .acr-stage .acr-intro { transition: opacity 260ms ease, transform 260ms ease; }

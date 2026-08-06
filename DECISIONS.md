@@ -56,9 +56,13 @@ trigger can carry a little more weight than an automatic page change.
 description that fades out the moment the first row lands, so the page introduces itself and
 then gets out of the way. It is hidden with `:has()` on the stage —
 `.acr-stage:has([data-osd-step='revealed']) .acr-intro` — rather than by threading reveal
-state through React, and it stays *in flow* while hidden so the rows never shift. It occupies
-exactly the 121px gap the rows already had below the heading (16 + 41 + 64), which is why
-adding it moved nothing.
+state through React.
+
+It is **absolutely positioned**, which buys two things: it costs no layout, so the rows keep
+the exact positions they had before it existed; and it can sit low — roughly at the optical
+centre of the band the rows will fill — instead of tucking under the heading and leaving the
+bottom half of the canvas empty. It also clears the first row's slot, so the fade-out and the
+first row's fade-in never overlap.
 
 `:has()` is Chrome 105+; the deck is presented in Chrome and open-slide's PDF export is
 Chrome-only anyway, so that is not a new constraint.
