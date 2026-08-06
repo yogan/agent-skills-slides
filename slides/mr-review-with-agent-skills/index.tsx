@@ -387,11 +387,25 @@ const ReviewMr: Page = () => (
   </Shell>
 );
 
+/**
+ * The presenter pane renders these as plain text with `white-space: pre-wrap`, so
+ * newlines survive but markdown does not — bullets have to be literal characters.
+ * The pane scrolls and its font size is adjustable, so a short list is fine.
+ */
 export const notes: (string | undefined)[] = [
   // 01 Title
-  'Show of hands: using AI? · more review than coding? · reviews with AI? · dedicated tooling?',
+  [
+    'Show of hands:',
+    '• Who is using AI?',
+    '• Who does more code review than actual coding now?',
+    '• Who is doing reviews with AI support?',
+    '• Who uses dedicated tooling for reviews?',
+  ].join('\n'),
   // 02 review-mr
-  'Start /review-mr !1, show when done (about 4 min). Then /review-mr !2, for the follow-up workflow.',
+  [
+    '• Start /review-mr !1 — show when done (about 4 min)',
+    '• Then /review-mr !2 — for the follow-up workflow',
+  ].join('\n'),
 ];
 
 export const meta: SlideMeta = {
