@@ -389,9 +389,9 @@ const ReviewMr: Page = () => (
 
 export const notes: (string | undefined)[] = [
   // 01 Title
-  'Show of hands, four questions, quick: Who here is using AI day to day? Who is now doing more code review than actual coding? Who does reviews with AI support already? And who uses dedicated tooling for it — not just pasting a diff into a chat window? Read the room off the last two; that gap is the talk.',
+  'Show of hands: using AI? · more review than coding? · reviews with AI? · dedicated tooling?',
   // 02 review-mr
-  '▶ START `/review-mr !1` NOW — it runs unattended for about 4 minutes, so it has to be going before you talk through this list. Then walk the five rows, slowly. Two of them are other skills from the same repo doing the work: review-mr composes, it is not one monolith. The pair that matters is agent review and human review — findings the agent produced, and comments I wrote by hand in the browser, synced into the same list and tracked the same way. On drafting: it writes the comment and puts the markdown on my clipboard; I paste it. review-mr is read-only against GitLab by design, so the tone stays mine and it never fights me for the browser. If anyone asks about the one exception: it can approve or revoke the MR, and only on my explicit ack. Posting a comment is the other hat — that is rework-mr. Follow-up is last because it only happens on later passes, days after the first comments went up: it lists every push since my baseline with its diffstat and which topics it touched, and it flags the topics it believes the author has resolved. Believes — the author resolving a thread is not a close. Only my ack is, and it will show me the diff per topic so I am not just trusting the reply.',
+  'Start /review-mr !1, show when done (about 4 min). Then /review-mr !2, for the follow-up workflow.',
 ];
 
 export const meta: SlideMeta = {
