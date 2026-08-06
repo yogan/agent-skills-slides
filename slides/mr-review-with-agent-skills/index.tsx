@@ -375,7 +375,11 @@ const ReviewMr: Page = () => (
       <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
       <Row label="human review" note="the comments you write yourself" aside="synced into the agent session" />
       <Row label="follow-up" note="which topics are resolved" aside="per-topic diffs · your ack closes" />
-      <Row label="drafting" note="support for writing good findings" />
+      <Row
+        label="drafting"
+        note="support for writing good findings"
+        aside="to your clipboard · you post"
+      />
     </div>
   </Shell>
 );
@@ -384,7 +388,7 @@ export const notes: (string | undefined)[] = [
   // 01 Title
   'Show of hands, four questions, quick: Who here is using AI day to day? Who is now doing more code review than actual coding? Who does reviews with AI support already? And who uses dedicated tooling for it — not just pasting a diff into a chat window? Read the room off the last two; that gap is the talk.',
   // 02 review-mr
-  '▶ START `/review-mr !1` NOW — it runs unattended for about 4 minutes, so it has to be going before you talk through this list. Then walk the five rows, slowly. Two of them are other skills from the same repo doing the work: review-mr composes, it is not one monolith. The pair that matters is agent review and human review — findings the agent produced, and comments I wrote by hand in the browser, synced into the same list and tracked the same way. On follow-up: the agent can tell me which topics are actually resolved and show me the diff per topic, but only my ack closes one — the author resolving a thread does not.',
+  '▶ START `/review-mr !1` NOW — it runs unattended for about 4 minutes, so it has to be going before you talk through this list. Then walk the five rows, slowly. Two of them are other skills from the same repo doing the work: review-mr composes, it is not one monolith. The pair that matters is agent review and human review — findings the agent produced, and comments I wrote by hand in the browser, synced into the same list and tracked the same way. On follow-up: the agent can tell me which topics are actually resolved and show me the diff per topic, but only my ack closes one — the author resolving a thread does not. On drafting: it writes the comment and puts it on my clipboard; I paste it. review-mr is read-only against GitLab by design, so the tone stays mine and it never fights me for the browser. If anyone asks about the one exception: it can approve or revoke the MR, and only on my explicit ack. Posting a comment is the other hat — that is rework-mr.',
 ];
 
 export const meta: SlideMeta = {
