@@ -361,7 +361,7 @@ const Row = ({ label, note, aside }: { label: string; note: string; aside?: stri
     </span>
     {/* Fixed note width rather than flex, so the asides form their own column right
         next to the text they annotate instead of drifting to the canvas edge. */}
-    <span style={{ width: 660, fontSize: 36, color: BODY }}>{note}</span>
+    <span style={{ width: 720, fontSize: 36, color: BODY }}>{note}</span>
     {aside ? <Aside text={aside} /> : null}
   </div>
 );
@@ -371,14 +371,17 @@ const ReviewMr: Page = () => (
     <SkillH name="review-mr" sub="reviewing someone else's MR" />
 
     <div style={{ marginTop: 64 }}>
+      {/* Order is the actual chronology of a review: understand it, let the agent find
+          things, add your own, write the comments — and only then, on later passes,
+          reconcile what came back. */}
       <Row label="explainer" note="a blog-style article for context" aside="/explain-branch" />
       <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
       <Row label="human review" note="the comments you write yourself" aside="synced into the agent session" />
-      <Row label="follow-up" note="which topics are resolved" aside="per-topic diffs · your ack closes" />
+      <Row label="drafting" note="support for writing good findings" aside="copy markdown to clipboard" />
       <Row
-        label="drafting"
-        note="support for writing good findings"
-        aside="to your clipboard · you post"
+        label="follow-up"
+        note="pushes with diffstats, resolved topics"
+        aside="agent detects · you ack"
       />
     </div>
   </Shell>
@@ -388,7 +391,7 @@ export const notes: (string | undefined)[] = [
   // 01 Title
   'Show of hands, four questions, quick: Who here is using AI day to day? Who is now doing more code review than actual coding? Who does reviews with AI support already? And who uses dedicated tooling for it — not just pasting a diff into a chat window? Read the room off the last two; that gap is the talk.',
   // 02 review-mr
-  '▶ START `/review-mr !1` NOW — it runs unattended for about 4 minutes, so it has to be going before you talk through this list. Then walk the five rows, slowly. Two of them are other skills from the same repo doing the work: review-mr composes, it is not one monolith. The pair that matters is agent review and human review — findings the agent produced, and comments I wrote by hand in the browser, synced into the same list and tracked the same way. On follow-up: the agent can tell me which topics are actually resolved and show me the diff per topic, but only my ack closes one — the author resolving a thread does not. On drafting: it writes the comment and puts it on my clipboard; I paste it. review-mr is read-only against GitLab by design, so the tone stays mine and it never fights me for the browser. If anyone asks about the one exception: it can approve or revoke the MR, and only on my explicit ack. Posting a comment is the other hat — that is rework-mr.',
+  '▶ START `/review-mr !1` NOW — it runs unattended for about 4 minutes, so it has to be going before you talk through this list. Then walk the five rows, slowly. Two of them are other skills from the same repo doing the work: review-mr composes, it is not one monolith. The pair that matters is agent review and human review — findings the agent produced, and comments I wrote by hand in the browser, synced into the same list and tracked the same way. On drafting: it writes the comment and puts the markdown on my clipboard; I paste it. review-mr is read-only against GitLab by design, so the tone stays mine and it never fights me for the browser. If anyone asks about the one exception: it can approve or revoke the MR, and only on my explicit ack. Posting a comment is the other hat — that is rework-mr. Follow-up is last because it only happens on later passes, days after the first comments went up: it lists every push since my baseline with its diffstat and which topics it touched, and it flags the topics it believes the author has resolved. Believes — the author resolving a thread is not a close. Only my ack is, and it will show me the diff per topic so I am not just trusting the reply.',
 ];
 
 export const meta: SlideMeta = {
