@@ -251,6 +251,15 @@ keyboard handling or its reduced-motion fallback:
 }
 ```
 
+The same attribute drives the reverse: an intro line that shows on arrival and gets out of the
+way once the content starts, hidden via `:has()` on a shared wrapper so no state has to be
+threaded through React. Keep it in flow while hidden so nothing below it shifts.
+
+```css
+.acr-stage .acr-intro { transition: opacity 260ms ease, transform 260ms ease; }
+.acr-stage:has([data-osd-step='revealed']) .acr-intro { opacity: 0; transform: translateY(-6px); }
+```
+
 A `@keyframes` animation will **not** work here: `<Step>` keeps its children mounted, so it
 would run at page mount rather than at reveal.
 

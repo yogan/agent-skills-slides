@@ -345,12 +345,26 @@ const Title: Page = () => (
  *
  * Scoped under `.acr-reveal` because any CSS loaded here is global.
  *
+ * The intro sentence sits in the gap the rows leave below the heading and fades out as soon
+ * as the first row lands — `:has()` on the stage, so no state has to be threaded through.
+ * It stays in flow while hidden, so nothing below it shifts.
+ *
  * The row rises as it fades in; the accent label settles in from the left a beat behind it,
  * which leans on the deck's left axis instead of fighting it. 18px / 12px and 320ms sit
  * just above the theme's transition band — a reveal you deliberately trigger can carry a
  * little more than an automatic page change.
  */
 const REVEAL_CSS = `
+.acr-stage .acr-intro {
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+.acr-stage:has([data-osd-step='revealed']) .acr-intro {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .acr-stage .acr-intro { transition: none; transform: none; }
+}
 .acr-reveal [data-osd-step] .acr-row,
 .acr-reveal [data-osd-step] .acr-label {
   transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -368,12 +382,31 @@ const REVEAL_CSS = `
 
 const RevealStyles = () => <style>{REVEAL_CSS}</style>;
 
+/**
+ * One-line description of the skill, shown when the page arrives and gone once the first row
+ * reveals. 16 + 41 + 64 = the 121px gap the rows previously had to themselves, so adding it
+ * back does not move them.
+ */
+const Intro = ({ children }: { children: ReactNode }) => (
+  <p
+    className="acr-intro"
+    style={{ fontSize: 34, lineHeight: 1.2, color: MUTED, margin: '16px 0 0' }}
+  >
+    {children}
+  </p>
+);
+
 /** Wraps the rows so each one reveals on its own `→`. */
 const RevealList = ({ children }: { children: ReactNode }) => (
-  <div className="acr-reveal" style={{ marginTop: 121 }}>
+  <div className="acr-reveal" style={{ marginTop: 64 }}>
     <RevealStyles />
     <Steps>{children}</Steps>
   </div>
+);
+
+/** Groups heading + intro + rows so `:has()` can see the steps from the intro. */
+const Stage = ({ children }: { children: ReactNode }) => (
+  <div className="acr-stage">{children}</div>
 );
 
 /**
@@ -415,32 +448,46 @@ const Row = ({ label, note, aside }: { label: string; note: string; aside?: stri
 
 const ReviewMr: Page = () => (
   <Shell>
-    <SkillH name="review-mr" />
+    <Stage>
+      <SkillH name="review-mr" />
+      <Intro>
+        The reviewer&rsquo;s side: everything from the first read of a branch to the comments
+        you post.
+      </Intro>
 
-    {/* Order is the actual chronology of a review: understand it, let the agent find
-        things, add your own, write the comments — and only then, on later passes,
-        reconcile what came back. */}
-    <RevealList>
-      <Step duration={320}>
-        <Row label="explainer" note="a blog-style article for context" aside="/explain-branch" />
-      </Step>
-      <Step duration={320}>
-        <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
-      </Step>
-      <Step duration={320}>
-        <Row label="human review" note="the comments you write yourself" aside="synced into the agent session" />
-      </Step>
-      <Step duration={320}>
-        <Row label="drafting" note="support for writing good findings" aside="copy markdown to clipboard" />
-      </Step>
-      <Step duration={320}>
-        <Row
-          label="follow-up"
-          note="pushes with diffstats, resolved topics"
-          aside="agent detects · you ack"
-        />
-      </Step>
-    </RevealList>
+      {/* Order is the actual chronology of a review: understand it, let the agent find
+          things, add your own, write the comments — and only then, on later passes,
+          reconcile what came back. */}
+      <RevealList>
+        <Step duration={320}>
+          <Row label="explainer" note="a blog-style article for context" aside="/explain-branch" />
+        </Step>
+        <Step duration={320}>
+          <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
+        </Step>
+        <Step duration={320}>
+          <Row
+            label="human review"
+            note="the comments you write yourself"
+            aside="synced into the agent session"
+          />
+        </Step>
+        <Step duration={320}>
+          <Row
+            label="drafting"
+            note="support for writing good findings"
+            aside="copy markdown to clipboard"
+          />
+        </Step>
+        <Step duration={320}>
+          <Row
+            label="follow-up"
+            note="pushes with diffstats, resolved topics"
+            aside="agent detects · you ack"
+          />
+        </Step>
+      </RevealList>
+    </Stage>
   </Shell>
 );
 
@@ -453,26 +500,44 @@ const ReviewMr: Page = () => (
 
 const ReworkMr: Page = () => (
   <Shell>
-    <SkillH name="rework-mr" />
+    <Stage>
+      <SkillH name="rework-mr" />
+      <Intro>
+        The author&rsquo;s side: everything from the reviewer&rsquo;s comments to the fixes you
+        push back.
+      </Intro>
 
-    {/* No sub-skills on this one — every aside is prose, so none render as commands. */}
-    <RevealList>
-      <Step duration={320}>
-        <Row label="threads" note="the reviewer's open topics" aside="one list, one plan per MR" />
-      </Step>
-      <Step duration={320}>
-        <Row label="grilling" note="every topic argued to a plan first" aside="no code until all are planned" />
-      </Step>
-      <Step duration={320}>
-        <Row label="fixing" note="failing test first, then the fix" aside="fixup into the introducing commit" />
-      </Step>
-      <Step duration={320}>
-        <Row label="pushing" note="force-push, then a stable diff URL" aside="never a commit link" />
-      </Step>
-      <Step duration={320}>
-        <Row label="replies" note="one per thread, in its language" aside="copy or post" />
-      </Step>
-    </RevealList>
+      {/* No sub-skills on this one — every aside is prose, so none render as commands. */}
+      <RevealList>
+        <Step duration={320}>
+          <Row
+            label="threads"
+            note="the reviewer's open topics"
+            aside="one list, one plan per MR"
+          />
+        </Step>
+        <Step duration={320}>
+          <Row
+            label="grilling"
+            note="every topic argued to a plan first"
+            aside="no code until all are planned"
+          />
+        </Step>
+        <Step duration={320}>
+          <Row
+            label="fixing"
+            note="failing test first, then the fix"
+            aside="fixup into the introducing commit"
+          />
+        </Step>
+        <Step duration={320}>
+          <Row label="pushing" note="force-push, then a stable diff URL" aside="never a commit link" />
+        </Step>
+        <Step duration={320}>
+          <Row label="replies" note="one per thread, in its language" aside="copy or post" />
+        </Step>
+      </RevealList>
+    </Stage>
   </Shell>
 );
 

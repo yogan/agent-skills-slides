@@ -52,6 +52,17 @@ it, leaning on the deck's left axis instead of fighting it.
 320ms sits just above the theme's 140–280ms transition band. A reveal you deliberately
 trigger can carry a little more weight than an automatic page change.
 
+**The intro sentence rides the same mechanism.** Each skill page opens with a one-line
+description that fades out the moment the first row lands, so the page introduces itself and
+then gets out of the way. It is hidden with `:has()` on the stage —
+`.acr-stage:has([data-osd-step='revealed']) .acr-intro` — rather than by threading reveal
+state through React, and it stays *in flow* while hidden so the rows never shift. It occupies
+exactly the 121px gap the rows already had below the heading (16 + 41 + 64), which is why
+adding it moved nothing.
+
+`:has()` is Chrome 105+; the deck is presented in Chrome and open-slide's PDF export is
+Chrome-only anyway, so that is not a new constraint.
+
 **The cost is keypresses:** a stepped page takes 6 `→` instead of 1, 13 for the whole deck.
 That is real during a live demo and is called out in the README.
 

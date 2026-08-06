@@ -72,7 +72,8 @@ There is **no slide furniture at all** — no footer, no page numbers, no runnin
 
 ### The rows reveal one at a time
 
-Each skill page arrives empty except its heading, and every `→` brings in the next row — so a
+Each skill page arrives showing its heading and a one-line description of the skill. The
+description **fades out as the first row arrives**, and every `→` brings in the next row — so a
 stepped page costs **6** presses, not 1. That is 13 from the title to the end of the deck.
 Worth one dry run before you present.
 
@@ -128,7 +129,7 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
 | `assets/` | brand icons (currently unused — see [`CREDITS.md`](assets/CREDITS.md)) |
-| `previews/` | rendered PNG of every page, so you can judge it without building |
+| `previews/` | rendered PNG of every page — plus `*-intro.png` for the skill pages as they first appear, before any row reveals |
 | [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
 | [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + the show-of-hands script, phone-readable |
 | `.agents/`, `.claude/` | open-slide's own authoring skills, shipped by the framework |
