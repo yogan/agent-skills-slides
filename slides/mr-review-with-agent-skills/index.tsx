@@ -27,17 +27,92 @@ const PANEL = '#130E24';
 const NEON_PINK = '#FF2DAA';
 const NEON_CYAN = '#00D9FF';
 
-// Layered, darkest first. The neon lives in the corners and along the bottom
-// horizon; the middle of the canvas — where the text sits — stays close to the
-// flat base colour, which is what keeps contrast intact on a washed-out projector.
+/**
+ * Starfield for the sky above the floor grid — 64 hand-placed points, so it renders
+ * identically every time. Density is biased upward and thins out before y≈790 where
+ * the grid takes over; anything landing in the text band is dimmed to ~55 % so it
+ * stays scenery. Nothing here is above 2.2px or 0.62 alpha.
+ *
+ * To re-scatter: change the positions. They are plain background layers, not nodes,
+ * so there is no DOM cost to the count.
+ */
+const STARS = [
+  'radial-gradient(2.2px 2.2px at 944px 215px, rgba(255,255,255,0.32), transparent)',
+  'radial-gradient(1.7px 1.7px at 766px 88px, rgba(255,255,255,0.33), transparent)',
+  'radial-gradient(1.3px 1.3px at 1807px 100px, rgba(255,190,235,0.44), transparent)',
+  'radial-gradient(1.1px 1.1px at 682px 265px, rgba(255,255,255,0.16), transparent)',
+  'radial-gradient(1.2px 1.2px at 1403px 113px, rgba(255,255,255,0.60), transparent)',
+  'radial-gradient(1.1px 1.1px at 16px 262px, rgba(255,255,255,0.32), transparent)',
+  'radial-gradient(1.6px 1.6px at 126px 190px, rgba(255,190,235,0.17), transparent)',
+  'radial-gradient(1.2px 1.2px at 681px 208px, rgba(255,255,255,0.15), transparent)',
+  'radial-gradient(1.0px 1.0px at 437px 569px, rgba(255,255,255,0.21), transparent)',
+  'radial-gradient(1.5px 1.5px at 997px 43px, rgba(190,220,255,0.58), transparent)',
+  'radial-gradient(2.0px 2.0px at 1181px 136px, rgba(255,255,255,0.48), transparent)',
+  'radial-gradient(1.6px 1.6px at 1804px 40px, rgba(255,255,255,0.54), transparent)',
+  'radial-gradient(2.1px 2.1px at 1202px 88px, rgba(255,255,255,0.47), transparent)',
+  'radial-gradient(2.2px 2.2px at 390px 215px, rgba(255,255,255,0.15), transparent)',
+  'radial-gradient(1.7px 1.7px at 1499px 397px, rgba(255,255,255,0.12), transparent)',
+  'radial-gradient(1.6px 1.6px at 1540px 454px, rgba(190,220,255,0.24), transparent)',
+  'radial-gradient(1.3px 1.3px at 78px 529px, rgba(255,255,255,0.26), transparent)',
+  'radial-gradient(1.3px 1.3px at 449px 567px, rgba(255,190,235,0.34), transparent)',
+  'radial-gradient(1.6px 1.6px at 1377px 448px, rgba(255,255,255,0.19), transparent)',
+  'radial-gradient(1.1px 1.1px at 1157px 273px, rgba(255,255,255,0.20), transparent)',
+  'radial-gradient(1.4px 1.4px at 1208px 522px, rgba(190,220,255,0.16), transparent)',
+  'radial-gradient(1.3px 1.3px at 143px 396px, rgba(255,255,255,0.29), transparent)',
+  'radial-gradient(1.1px 1.1px at 866px 98px, rgba(190,220,255,0.26), transparent)',
+  'radial-gradient(1.1px 1.1px at 1003px 403px, rgba(255,255,255,0.16), transparent)',
+  'radial-gradient(1.5px 1.5px at 28px 561px, rgba(255,255,255,0.57), transparent)',
+  'radial-gradient(1.5px 1.5px at 267px 307px, rgba(255,255,255,0.14), transparent)',
+  'radial-gradient(1.5px 1.5px at 1626px 587px, rgba(255,190,235,0.59), transparent)',
+  'radial-gradient(1.2px 1.2px at 1325px 426px, rgba(255,255,255,0.15), transparent)',
+  'radial-gradient(1.4px 1.4px at 91px 379px, rgba(255,255,255,0.28), transparent)',
+  'radial-gradient(1.6px 1.6px at 1158px 78px, rgba(190,220,255,0.50), transparent)',
+  'radial-gradient(1.6px 1.6px at 1698px 105px, rgba(255,190,235,0.24), transparent)',
+  'radial-gradient(1.7px 1.7px at 1072px 236px, rgba(190,220,255,0.32), transparent)',
+  'radial-gradient(1.7px 1.7px at 780px 191px, rgba(255,255,255,0.29), transparent)',
+  'radial-gradient(2.1px 2.1px at 253px 533px, rgba(255,190,235,0.24), transparent)',
+  'radial-gradient(1.4px 1.4px at 1281px 49px, rgba(255,190,235,0.38), transparent)',
+  'radial-gradient(1.1px 1.1px at 782px 87px, rgba(255,255,255,0.27), transparent)',
+  'radial-gradient(2.0px 2.0px at 1339px 66px, rgba(255,190,235,0.54), transparent)',
+  'radial-gradient(1.5px 1.5px at 1189px 237px, rgba(190,220,255,0.18), transparent)',
+  'radial-gradient(1.3px 1.3px at 840px 218px, rgba(255,255,255,0.24), transparent)',
+  'radial-gradient(1.5px 1.5px at 1059px 361px, rgba(255,255,255,0.30), transparent)',
+  'radial-gradient(1.1px 1.1px at 1683px 263px, rgba(255,190,235,0.58), transparent)',
+  'radial-gradient(1.6px 1.6px at 1804px 101px, rgba(255,190,235,0.48), transparent)',
+  'radial-gradient(1.0px 1.0px at 1511px 335px, rgba(255,255,255,0.16), transparent)',
+  'radial-gradient(1.2px 1.2px at 1145px 617px, rgba(255,255,255,0.24), transparent)',
+  'radial-gradient(1.1px 1.1px at 558px 627px, rgba(255,255,255,0.26), transparent)',
+  'radial-gradient(1.1px 1.1px at 1035px 412px, rgba(255,255,255,0.31), transparent)',
+  'radial-gradient(1.6px 1.6px at 486px 314px, rgba(255,190,235,0.17), transparent)',
+  'radial-gradient(1.1px 1.1px at 701px 311px, rgba(255,255,255,0.33), transparent)',
+  'radial-gradient(1.2px 1.2px at 752px 40px, rgba(255,255,255,0.48), transparent)',
+  'radial-gradient(2.1px 2.1px at 1014px 127px, rgba(255,255,255,0.24), transparent)',
+  'radial-gradient(1.6px 1.6px at 1642px 216px, rgba(255,255,255,0.56), transparent)',
+  'radial-gradient(1.6px 1.6px at 671px 212px, rgba(255,255,255,0.12), transparent)',
+  'radial-gradient(1.2px 1.2px at 1782px 331px, rgba(255,255,255,0.47), transparent)',
+  'radial-gradient(1.5px 1.5px at 137px 472px, rgba(255,190,235,0.22), transparent)',
+  'radial-gradient(1.1px 1.1px at 1533px 637px, rgba(255,255,255,0.20), transparent)',
+  'radial-gradient(2.1px 2.1px at 224px 74px, rgba(255,255,255,0.41), transparent)',
+  'radial-gradient(1.3px 1.3px at 1124px 634px, rgba(255,255,255,0.15), transparent)',
+  'radial-gradient(1.6px 1.6px at 902px 49px, rgba(255,190,235,0.27), transparent)',
+  'radial-gradient(1.7px 1.7px at 1869px 415px, rgba(255,255,255,0.53), transparent)',
+  'radial-gradient(1.6px 1.6px at 1656px 12px, rgba(190,220,255,0.30), transparent)',
+  'radial-gradient(1.3px 1.3px at 1834px 286px, rgba(255,190,235,0.44), transparent)',
+  'radial-gradient(1.3px 1.3px at 410px 241px, rgba(255,190,235,0.15), transparent)',
+  'radial-gradient(1.5px 1.5px at 1708px 106px, rgba(190,220,255,0.40), transparent)',
+  'radial-gradient(1.6px 1.6px at 635px 511px, rgba(255,255,255,0.21), transparent)',
+];
+
+// Layered, topmost first. Stars sit above the nebula blooms so they stay crisp; the
+// neon lives in the corners and along the bottom horizon, and the middle of the
+// canvas — where the text sits — stays close to the flat base colour, which is what
+// keeps contrast intact on a washed-out projector.
 const TEXTURE = [
+  ...STARS,
   'radial-gradient(1250px 800px at 86% -8%, rgba(255,45,170,0.16), transparent 60%)',
   'radial-gradient(1050px 720px at -4% 104%, rgba(0,217,255,0.13), transparent 60%)',
   'radial-gradient(1500px 460px at 50% 112%, rgba(255,140,60,0.13), transparent 68%)',
   'radial-gradient(900px 620px at 12% -10%, rgba(120,60,255,0.10), transparent 62%)',
-  // 120px grid, cooled to match
-  'repeating-linear-gradient(to right, rgba(170,190,255,0.032) 0 1px, transparent 1px 120px)',
-  'repeating-linear-gradient(to bottom, rgba(170,190,255,0.032) 0 1px, transparent 1px 120px)',
   // CRT scanlines. 6px period, not 3-4px: a tighter pitch moirés against projector
   // pixels. Delete this one line if it shimmers on the venue hardware.
   'repeating-linear-gradient(to bottom, rgba(0,0,0,0.13) 0 1px, transparent 1px 6px)',
@@ -65,6 +140,19 @@ const Horizon = () => (
         <stop offset="35%" stopColor={NEON_PINK} stopOpacity="0.30" />
         <stop offset="100%" stopColor={NEON_CYAN} stopOpacity="0.42" />
       </linearGradient>
+      {/* Falloff for the whole grid, anchored at the bottom centre. Because the units
+          are the grid box's own (1920 × 260), the circle stretches into a wide ellipse,
+          which fades the left and right edges and the far end in one pass — and the far
+          corners, being furthest from the anchor, drop out almost entirely. */}
+      <radialGradient id="acr-falloff" cx="0.5" cy="1" r="1.2">
+        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+        <stop offset="35%" stopColor="#FFFFFF" stopOpacity="0.92" />
+        <stop offset="70%" stopColor="#FFFFFF" stopOpacity="0.48" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+      <mask id="acr-grid-mask" maskUnits="userSpaceOnUse" x="0" y="820" width="1920" height="260">
+        <rect x="0" y="820" width="1920" height="260" fill="url(#acr-falloff)" />
+      </mask>
       {/* Front-edge shadow. The grid is densest exactly where the footer sits, so it
           sinks into darkness there — keeps the marker and page number readable. */}
       <linearGradient id="acr-floor" gradientUnits="userSpaceOnUse" x1="0" y1="950" x2="0" y2="1080">
@@ -73,7 +161,7 @@ const Horizon = () => (
       </linearGradient>
     </defs>
 
-    <g stroke="url(#acr-depth)" strokeWidth="2" fill="none">
+    <g mask="url(#acr-grid-mask)" stroke="url(#acr-depth)" strokeWidth="2" fill="none">
       {/* Rays to the vanishing point. Spacing widens geometrically outward, and the
           outermost pairs run far off-canvas (±16000) on purpose: near the horizon the
           rays converge hard, so without those the verticals stop short and the grid

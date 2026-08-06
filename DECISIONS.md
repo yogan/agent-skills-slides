@@ -91,6 +91,17 @@ Requested after the first pass, and built to stay projector-safe:
   plus quadratically-spaced depth rows, fading pink→cyan with distance. The ray fan runs far
   off-canvas (±16000 in user units) because near the horizon the rays converge hard — without
   the outer ones the verticals stop short and the grid visibly runs out at the sides.
+- **The grid is masked by a radial falloff** anchored at the bottom centre (`#acr-falloff`).
+  Its units are the grid box's own 1920 × 260, so the circle stretches into a wide ellipse —
+  one gradient fades the left and right edges *and* the far end, and the far corners, being
+  furthest from the anchor, drop out almost entirely. That is what stops the grid from ending
+  on a hard edge.
+- **The sky is a starfield, not a grid.** The original 120px rectangular grid read fine on a
+  flat background but fought the perspective floor, so it is gone. In its place: 64 stars as
+  plain CSS `radial-gradient` background layers — no DOM nodes, no image to load, and stable
+  across renders because every position is literal. Density is biased upward and stops before
+  the grid begins; anything in the text band is dimmed to ~55 %, and nothing exceeds 2.2px or
+  0.62 alpha. They are scenery, not content.
 - **A front-edge scrim** (`#acr-floor`, y 950→1080) sinks the grid into shadow exactly where
   the footer sits, so the marker and page number stay legible over the densest part.
 - **No horizon line.** There was one; it read as a stray rule across the canvas rather than a
