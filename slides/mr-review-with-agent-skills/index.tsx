@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
+import iconReview from '@assets/lucide-search-check.svg';
+import iconRework from '@assets/lucide-wrench.svg';
 
 export const design: DesignSystem = {
   // accent = "sunset gold". Warmer than the amber this deck started with (hue 40° → 35°),
@@ -254,9 +256,43 @@ const Shell = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-/** Heading for a skill name — monospace, because that is how you type it. */
-const SkillH = ({ name, sub }: { name: string; sub?: string }) => (
-  <div>
+/**
+ * Line icon, coloured from the palette rather than from the file. The source SVGs are
+ * unmodified lucide (stroke-based, `stroke="currentColor"`), which would render black
+ * in an `<img>`; masking uses only their alpha channel, so the accent shows through and
+ * the icon follows a palette change instead of having a hex baked in.
+ */
+const Icon = ({ src, size = 84 }: { src: string; size?: number }) => (
+  <span
+    aria-hidden="true"
+    style={{
+      width: size,
+      height: size,
+      flexShrink: 0,
+      backgroundColor: 'var(--osd-accent)',
+      // The URL must be quoted: Vite inlines the SVG as a data URI and rewrites its
+      // attribute quotes to apostrophes, which an unquoted CSS url() token cannot
+      // contain — the declaration would be dropped and the mask silently ignored,
+      // leaving a solid accent-coloured box.
+      WebkitMaskImage: `url("${src}")`,
+      maskImage: `url("${src}")`,
+      WebkitMaskSize: 'contain',
+      maskSize: 'contain',
+      WebkitMaskRepeat: 'no-repeat',
+      maskRepeat: 'no-repeat',
+      WebkitMaskPosition: 'center',
+      maskPosition: 'center',
+    }}
+  />
+);
+
+/**
+ * Heading for a skill name — monospace, because that is how you type it. The icon sits
+ * on the heading's own line, at the right edge of the content column: a row is only as
+ * tall as the heading, so adding one costs no vertical space and nothing below moves.
+ */
+const SkillH = ({ name, icon }: { name: string; icon: string }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
     <h2
       style={{
         fontFamily: MONO,
@@ -270,9 +306,7 @@ const SkillH = ({ name, sub }: { name: string; sub?: string }) => (
       <span style={{ color: 'var(--osd-accent)' }}>/</span>
       {name}
     </h2>
-    {sub ? (
-      <div style={{ fontSize: 34, lineHeight: 1.2, color: MUTED, marginTop: 16 }}>{sub}</div>
-    ) : null}
+    <Icon src={icon} />
   </div>
 );
 
@@ -368,9 +402,11 @@ const Row = ({ label, note, aside }: { label: string; note: string; aside?: stri
 
 const ReviewMr: Page = () => (
   <Shell>
-    <SkillH name="review-mr" sub="reviewing someone else's MR" />
+    <SkillH name="review-mr" icon={iconReview} />
 
-    <div style={{ marginTop: 64 }}>
+    {/* 121 = the old 64 plus the 57px the dropped subheading occupied, so the heading
+        and the rows stay exactly where they were before it went. */}
+    <div style={{ marginTop: 121 }}>
       {/* Order is the actual chronology of a review: understand it, let the agent find
           things, add your own, write the comments — and only then, on later passes,
           reconcile what came back. */}
@@ -396,9 +432,9 @@ const ReviewMr: Page = () => (
 
 const ReworkMr: Page = () => (
   <Shell>
-    <SkillH name="rework-mr" sub="answering the review of your own MR" />
+    <SkillH name="rework-mr" icon={iconRework} />
 
-    <div style={{ marginTop: 64 }}>
+    <div style={{ marginTop: 121 }}>
       {/* No sub-skills on this one — every aside is prose, so none render as commands. */}
       <Row label="threads" note="the reviewer's open topics" aside="one list, one plan per MR" />
       <Row label="grilling" note="every topic argued to a plan first" aside="no code until all are planned" />

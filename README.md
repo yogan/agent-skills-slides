@@ -111,7 +111,7 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 | `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 3 pages, `notes`, `design`, and the background art |
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
-| `assets/` | brand icons (currently unused — see [`CREDITS.md`](assets/CREDITS.md)) |
+| `assets/` | the two skill icons, plus three unused brand icons — see [`CREDITS.md`](assets/CREDITS.md) |
 | `previews/` | rendered PNG of every page, so you can judge it without building |
 | [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
 | [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + the show-of-hands script, phone-readable |

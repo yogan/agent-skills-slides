@@ -181,6 +181,46 @@ over during a live demo, nobody navigates by slide number, and the furniture was
 with the floor grid at the bottom of the canvas. If you ever want it back, `useSlidePageNumber()`
 is the hook — never hardcode `n` / `total`.
 
+### Icons
+
+One simple line icon per skill slide, sitting on the heading's own line at the right edge of
+the content column — a flex row is only as tall as the heading, so an icon costs no vertical
+space and nothing below it moves.
+
+Source them from [lucide](https://lucide.dev/) (ISC) and commit the file **unmodified**. Apply
+it as a CSS mask rather than an `<img>`, so the colour comes from the palette:
+
+```tsx
+const Icon = ({ src, size = 84 }: { src: string; size?: number }) => (
+  <span
+    aria-hidden="true"
+    style={{
+      width: size,
+      height: size,
+      flexShrink: 0,
+      backgroundColor: 'var(--osd-accent)',
+      // Quote the URL. Vite inlines the SVG as a data URI and rewrites its attribute
+      // quotes to apostrophes, which an unquoted CSS url() token cannot contain — the
+      // declaration gets dropped and you get a solid accent-coloured box instead.
+      WebkitMaskImage: `url("${src}")`,
+      maskImage: `url("${src}")`,
+      WebkitMaskSize: 'contain',
+      maskSize: 'contain',
+      WebkitMaskRepeat: 'no-repeat',
+      maskRepeat: 'no-repeat',
+      WebkitMaskPosition: 'center',
+      maskPosition: 'center',
+    }}
+  />
+);
+```
+
+Lucide icons are stroke-based with `stroke="currentColor"`, which renders black in an `<img>`.
+Masking uses only the alpha channel, so the stroke shows through in the accent and the icon
+follows a palette change instead of having a hex baked in.
+
+**One icon per slide, no more.** It is a marker, not decoration.
+
 ### Eyebrow
 
 ```tsx
