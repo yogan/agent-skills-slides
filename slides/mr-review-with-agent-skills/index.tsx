@@ -6,7 +6,7 @@ import dockerLogo from '@assets/docker.svg';
 import claudeLogo from '@assets/claude.svg';
 
 export const design: DesignSystem = {
-  palette: { bg: '#0A0E13', text: '#E8EDF2', accent: '#FFC24B' },
+  palette: { bg: '#0A0716', text: '#E8EDF2', accent: '#FFC24B' },
   fonts: {
     display: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
     body: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
@@ -17,20 +17,106 @@ export const design: DesignSystem = {
 
 // Outside the DesignSystem shape, so plain consts.
 const MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace';
-const MUTED = '#8695A6';
-const DIM = '#5C6B7C';
-const LINE = '#1E2833';
-const PANEL = '#111823';
+const MUTED = '#98A6BC';
+const DIM = '#6E7C95';
+const LINE = '#241C3C';
+const PANEL = '#130E24';
 
-// Faint 120px grid + a single warm bloom behind the top-right corner. Subtle on
-// purpose: a projector crushes anything busier than this into mud.
+// Synthwave neon — magenta and cyan. Used ONLY in the background; never for text,
+// so the palette stays one accent (amber) as far as anything readable is concerned.
+const NEON_PINK = '#FF2DAA';
+const NEON_CYAN = '#00D9FF';
+
+// Layered, darkest first. The neon lives in the corners and along the bottom
+// horizon; the middle of the canvas — where the text sits — stays close to the
+// flat base colour, which is what keeps contrast intact on a washed-out projector.
 const TEXTURE = [
-  'radial-gradient(1300px 760px at 80% 4%, rgba(255,194,75,0.055), transparent 70%)',
-  'repeating-linear-gradient(to right, rgba(232,237,242,0.028) 0 1px, transparent 1px 120px)',
-  'repeating-linear-gradient(to bottom, rgba(232,237,242,0.028) 0 1px, transparent 1px 120px)',
+  'radial-gradient(1250px 800px at 86% -8%, rgba(255,45,170,0.16), transparent 60%)',
+  'radial-gradient(1050px 720px at -4% 104%, rgba(0,217,255,0.13), transparent 60%)',
+  'radial-gradient(1500px 460px at 50% 112%, rgba(255,140,60,0.13), transparent 68%)',
+  'radial-gradient(900px 620px at 12% -10%, rgba(120,60,255,0.10), transparent 62%)',
+  // 120px grid, cooled to match
+  'repeating-linear-gradient(to right, rgba(170,190,255,0.032) 0 1px, transparent 1px 120px)',
+  'repeating-linear-gradient(to bottom, rgba(170,190,255,0.032) 0 1px, transparent 1px 120px)',
+  // CRT scanlines. 6px period, not 3-4px: a tighter pitch moirés against projector
+  // pixels. Delete this one line if it shimmers on the venue hardware.
+  'repeating-linear-gradient(to bottom, rgba(0,0,0,0.13) 0 1px, transparent 1px 6px)',
 ].join(', ');
 
 const PAD = 120;
+
+/**
+ * The synthwave perspective grid along the bottom edge, plus its horizon glow.
+ * Vanishing point (960, 820); rows spaced quadratically so they bunch toward the
+ * horizon. Sits behind everything and is masked to fade upward, so the footer and
+ * the lowest line of a dense page still read cleanly over it.
+ */
+const Horizon = () => (
+  <svg
+    viewBox="0 0 1920 1080"
+    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}
+    aria-hidden="true"
+  >
+    <defs>
+      {/* userSpaceOnUse, not the default objectBoundingBox: a horizontal line has a
+          zero-height bbox, which collapses a vertical gradient to nothing. */}
+      <linearGradient id="acr-depth" gradientUnits="userSpaceOnUse" x1="0" y1="820" x2="0" y2="1080">
+        <stop offset="0%" stopColor={NEON_PINK} stopOpacity="0.05" />
+        <stop offset="35%" stopColor={NEON_PINK} stopOpacity="0.30" />
+        <stop offset="100%" stopColor={NEON_CYAN} stopOpacity="0.42" />
+      </linearGradient>
+      {/* Front-edge shadow. The grid is densest exactly where the footer sits, so it
+          sinks into darkness there — keeps the marker and page number readable. */}
+      <linearGradient id="acr-floor" gradientUnits="userSpaceOnUse" x1="0" y1="950" x2="0" y2="1080">
+        <stop offset="0%" stopColor="#0A0716" stopOpacity="0" />
+        <stop offset="100%" stopColor="#0A0716" stopOpacity="0.92" />
+      </linearGradient>
+    </defs>
+
+    <g stroke="url(#acr-depth)" strokeWidth="2" fill="none">
+      {/* Rays to the vanishing point. Spacing widens geometrically outward, and the
+          outermost pairs run far off-canvas (±16000) on purpose: near the horizon the
+          rays converge hard, so without those the verticals stop short and the grid
+          visibly runs out at the left and right of its upper band. */}
+      <line x1="960" y1="820" x2="-15040" y2="1080" />
+      <line x1="960" y1="820" x2="-9040" y2="1080" />
+      <line x1="960" y1="820" x2="-6540" y2="1080" />
+      <line x1="960" y1="820" x2="-4540" y2="1080" />
+      <line x1="960" y1="820" x2="-3190" y2="1080" />
+      <line x1="960" y1="820" x2="-2240" y2="1080" />
+      <line x1="960" y1="820" x2="-1540" y2="1080" />
+      <line x1="960" y1="820" x2="-990" y2="1080" />
+      <line x1="960" y1="820" x2="-540" y2="1080" />
+      <line x1="960" y1="820" x2="-160" y2="1080" />
+      <line x1="960" y1="820" x2="170" y2="1080" />
+      <line x1="960" y1="820" x2="460" y2="1080" />
+      <line x1="960" y1="820" x2="720" y2="1080" />
+      <line x1="960" y1="820" x2="960" y2="1080" />
+      <line x1="960" y1="820" x2="1200" y2="1080" />
+      <line x1="960" y1="820" x2="1460" y2="1080" />
+      <line x1="960" y1="820" x2="1750" y2="1080" />
+      <line x1="960" y1="820" x2="2080" y2="1080" />
+      <line x1="960" y1="820" x2="2460" y2="1080" />
+      <line x1="960" y1="820" x2="2910" y2="1080" />
+      <line x1="960" y1="820" x2="3460" y2="1080" />
+      <line x1="960" y1="820" x2="4160" y2="1080" />
+      <line x1="960" y1="820" x2="5110" y2="1080" />
+      <line x1="960" y1="820" x2="6460" y2="1080" />
+      <line x1="960" y1="820" x2="8460" y2="1080" />
+      <line x1="960" y1="820" x2="10960" y2="1080" />
+      <line x1="960" y1="820" x2="16960" y2="1080" />
+      {/* depth rows */}
+      <line x1="0" y1="836" x2="1920" y2="836" />
+      <line x1="0" y1="857" x2="1920" y2="857" />
+      <line x1="0" y1="885" x2="1920" y2="885" />
+      <line x1="0" y1="922" x2="1920" y2="922" />
+      <line x1="0" y1="966" x2="1920" y2="966" />
+      <line x1="0" y1="1019" x2="1920" y2="1019" />
+    </g>
+
+    <rect x="0" y="950" width="1920" height="130" fill="url(#acr-floor)" />
+  </svg>
+);
 
 const Footer = ({ marker }: { marker: string }) => {
   const { current, total } = useSlidePageNumber();
@@ -41,6 +127,7 @@ const Footer = ({ marker }: { marker: string }) => {
         left: PAD,
         right: PAD,
         bottom: 52,
+        zIndex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -76,14 +163,25 @@ const Shell = ({ marker, children }: { marker?: string; children: ReactNode }) =
       backgroundImage: TEXTURE,
       color: 'var(--osd-text)',
       fontFamily: 'var(--osd-font-body)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
       padding: `${PAD}px ${PAD}px 152px`,
       boxSizing: 'border-box',
+      overflow: 'hidden',
     }}
   >
-    {children}
+    <Horizon />
+    {/* Content sits in its own layer above the background art. */}
+    <div
+      style={{
+        position: 'relative',
+        zIndex: 1,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+      }}
+    >
+      {children}
+    </div>
     {marker ? <Footer marker={marker} /> : null}
   </div>
 );

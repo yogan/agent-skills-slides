@@ -65,23 +65,39 @@ crowd will want it.
 
 | Choice | Value | Why |
 | --- | --- | --- |
-| Background | `#0A0E13` | Near-black with a blue cast. True black bands badly on projectors. |
-| Text | `#E8EDF2` | 16.4:1 on the background. |
-| **Accent** | `#FFC24B` amber | One accent, used everywhere. 12.0:1 on the background, and it survives a washed-out projector far better than a mid-blue would. |
-| Muted | `#8695A6` (6.3:1), dim `#5C6B7C` (3.6:1) | Secondary text only. **Nothing load-bearing is in dim** — it carries page numbers, the marker and footnotes. Dim is the one value below 4.5:1, which is why nothing you need to read sits in it. |
+| Background | `#0A0716` | Deep violet-black. True black bands badly on projectors, and the violet is what lets the neon read as neon. |
+| Text | `#E8EDF2` | 16.9:1 on the flat base. |
+| **Accent** | `#FFC24B` amber | One accent for everything readable. 12.4:1 on the base. |
+| Muted | `#98A6BC` (8.1:1), dim `#6E7C95` (4.7:1) | Both lifted when the background went synthwave, so secondary text keeps its margin over a busier canvas. |
 | Display / body | system sans (SF Pro on the speaker's Mac) | Heavy weights (800–850) for headings. |
 | Monospace | SF Mono / Menlo stack | Used for **anything you could actually type** — skill names, file paths, commands, the topic table. That is the whole "nerdy" budget. |
 | Hero | 132px | Fits "Agentic Code Reviews" on one line within the 1680px content width. |
 | Body | 32–40px | Well above the 28px projector floor. |
 
-**Why amber and not the obvious terminal green:** the deck reproduces the skills' own severity
-glyphs (🔴🟠🟡🔵) and status glyphs. Green would have read as a sixth status colour. Amber
-sits next to the severity dots without competing, and it is already the colour of `◐
-needs-ack` in the real tool.
+### The synthwave background
 
-**Texture:** a 120px grid at ~3 % white plus one warm bloom top-right. Deliberately almost
-invisible — anything busier turns to mud when projected. It is there so the pages don't read
-as flat black rectangles.
+Requested after the first pass, and built to stay projector-safe:
+
+- **Neon is background-only.** Magenta `#FF2DAA` and cyan `#00D9FF` appear in blooms and the
+  floor grid — **never in text**. So the readable palette is still one accent (amber), which
+  is also why the severity glyphs (🔴🟠🟡🔵) still don't compete with anything.
+- **Amber survived the reskin** rather than being swapped for the genre-typical magenta:
+  sunset amber is squarely synthwave anyway, and it keeps the accent distinct from the
+  background neon.
+- **The blooms sit in the corners**, so the middle of the canvas — where the text is — stays
+  near the flat base. Worst case, inside the brightest bloom overlap, is **11.4:1 for text and
+  8.3:1 for the accent** (measured, not estimated).
+- **The floor grid** is an SVG perspective grid with its vanishing point at `(960, 820)`: rays
+  plus quadratically-spaced depth rows, fading pink→cyan with distance. The ray fan runs far
+  off-canvas (±16000 in user units) because near the horizon the rays converge hard — without
+  the outer ones the verticals stop short and the grid visibly runs out at the sides.
+- **A front-edge scrim** (`#acr-floor`, y 950→1080) sinks the grid into shadow exactly where
+  the footer sits, so the marker and page number stay legible over the densest part.
+- **No horizon line.** There was one; it read as a stray rule across the canvas rather than a
+  horizon, so it came out.
+- **Scanlines at a 6px pitch**, not the 3–4px a CRT would suggest — a tighter pitch moirés
+  against projector pixels. If it shimmers on the venue hardware, delete the single
+  `repeating-linear-gradient` line in `TEXTURE` that draws them.
 
 **No page transitions.** open-slide has no default and snap-swap is tasteful. Adding motion to
 a deck that gets driven mid-live-demo is risk for no gain.
