@@ -5,6 +5,11 @@ renders with the venue wifi unplugged.
 
 ## Icons
 
+> **Currently unused.** These were the rig slide's; that page was pruned when the deck was
+> reset to a clean base. They are kept because they are tiny, already licence-cleared, and
+> likely to come back — re-fetching them offline later would be the annoying option.
+
+
 All three are brand icons from [simple-icons](https://simpleicons.org/), fetched once from
 `https://cdn.simpleicons.org/<slug>/E8EDF2` so the glyph colour is baked into the file
 (the deck's foreground grey) and no runtime recolouring is needed.

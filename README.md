@@ -4,13 +4,17 @@ Slides for the ~30 minute talk on reviewing GitLab MRs (and answering the review
 Claude Code agent skills. Built with [open-slide](https://open-slide.dev/): each page is a
 React component on a fixed 1920×1080 canvas.
 
-**The deck is support, not the act.** The talk is ~90 % live terminal demo. These 10 pages
-exist mainly to cover the ~4 minute stretch at the top while `/review-mr !1` runs
-unattended, plus a handful of beats later on.
+**The deck is support, not the act.** The talk is ~90 % live terminal demo.
 
-## Starting another deck?
+> ### State: clean base — 2 slides
+>
+> The deck was deliberately pruned back to a title and one `/review-mr` slide, and content is
+> being built up again from there. What is here is finished; it is just not finished *talk*.
+> See [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
 
-Build it from **`themes/synthwave-terminal.md`** — the palette, type scale, layout metrics and
+## Starting another deck — or adding the next slide?
+
+Build from **`themes/synthwave-terminal.md`** — the palette, type scale, layout metrics and
 paste-ready `Shell` / `Footer` / `Kicker` / `SkillH` components live there, with the reasoning
 for each. `/create-slide` will offer it as a picker option, and the dev UI's **Themes** panel
 previews it live from `themes/synthwave-terminal.demo.tsx`.
@@ -28,8 +32,8 @@ Open the slide **Agentic Code Reviews**, then:
 | --- | --- |
 | `F` | fullscreen play mode — **this is what you present from** |
 | `P` | presenter window: current page, next page, **speaker notes**, elapsed timer |
-| `→` / `Space` | next page (or next reveal, on page 8) |
-| `←` | previous page / peel back a reveal |
+| `→` / `Space` | next page |
+| `←` | previous page |
 | `Esc` | leave play mode |
 
 Put the presenter window on the laptop and mirror play mode to the projector.
@@ -56,23 +60,12 @@ the deck and use the **Export** menu in the slide toolbar:
 - **HTML** — a static snapshot; downloads as a zip when the deck references assets.
 - **PPTX** — each page as an image on a slide. Not editable.
 
-A PDF flattens page 8's stepped reveal into its fully-revealed state, which is what you want
-for a handout.
-
 ## The pages
 
 | # | Page | Footer marker |
 | --- | --- | --- |
 | 01 | Title — **no footer, no page number, by design** | — |
-| 02 | `review-branch` | `review-branch` |
-| 03 | `explain-diff` | `explain-diff` |
-| 04 | `explain-branch` | `explain-branch` |
-| 05 | `review-mr` — the loop | `review-mr` |
-| 06 | `review-mr` — the multi-day part | `review-mr` |
-| 07 | `rework-mr` | `rework-mr` |
-| 08 | Design principles — **3 stepped reveals** | `design` |
-| 09 | The rig | `the rig` |
-| 10 | Wrap | `wrap` |
+| 02 | `/review-mr` — five verbs, what it does | `review-mr` |
 
 ## Speaker notes
 
@@ -80,27 +73,26 @@ Notes live in **two** places, deliberately:
 
 - `slides/mr-review-with-agent-skills/index.tsx` → the `notes` export. This is what the
   presenter window (`P`) shows. **This is the copy that matters during the talk.**
-- [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) — the same notes, plus timing and the handful of
-  facts worth having in front of you. Readable on a phone.
+- [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) — the same notes plus the detail that does not fit a
+  notes pane: the show-of-hands script, and the exact `/review-mr !1` invocation to paste.
 
 If you edit one, edit the other. They are index-aligned with the page array.
 
-## What to edit for a last-minute tweak
+**Page 02's note is a cue, not commentary:** start `/review-mr !1` as the slide goes up. It
+runs ~4 minutes unattended and has to be going before you talk through the list.
+
+## What to edit
 
 Everything is one file: `slides/mr-review-with-agent-skills/index.tsx`. `npm run dev` hot-reloads.
 
 | Want to change | Where |
 | --- | --- |
-| Title, the `/review-mr - /rework-mr` eyebrow, the name / event / date line | `Title`. It is intentionally bare — three elements and no footer. |
-| Colours, fonts, hero size | the `design` const at the top; or live-tweak via the **Design** button in the dev UI and hit Save. Everything else reads from it — `BG` / `ACCENT` re-export it for SVG and JS, so there are no stray hexes to chase. Mirror any change into `themes/synthwave-terminal.md`. |
+| Title, the `/review-mr · /rework-mr` eyebrow, the name / event / date line | `Title`. It is intentionally bare — three elements and no footer. |
+| Colours, fonts, hero size | the `design` const at the top; or live-tweak via the **Design** button in the dev UI and hit Save. Everything reads from it, so there are no stray hexes to chase. Mirror any change into `themes/synthwave-terminal.md`. |
 | Anything on one page | find its component — `grep -n ": Page = " slides/*/index.tsx` |
-| Page order, or cut a page | the `export default [...]` array at the bottom. Page numbers and `NN / 10` update themselves via `useSlidePageNumber()` — nothing to renumber. **Keep `notes` in the same order.** |
+| **Add a page** | write the component, add it to the `export default [...]` array, **and add a matching `notes` entry at the same index**. Page numbers update themselves via `useSlidePageNumber()`. |
 | Give the title page a footer after all | pass a `marker` to its `<Shell>`; omitting `marker` is what suppresses the footer |
-| Drop the stepped reveal on page 8 | delete the `<Steps>`/`<Step>` wrappers in `Principles`; the content stays |
 | The footer marker per page | the `marker` prop on each `<Shell>` |
-
-Cutting a page is the safest way to lose time on the day: pages 3, 4 and 9 are the ones the
-talk can survive without — and of those, protect 9 (the rig), which this crowd will want.
 
 ## Layout rules worth knowing before you edit
 
@@ -116,11 +108,11 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 
 | Path | What |
 | --- | --- |
-| `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 10 pages, `notes`, `design` |
-| `assets/` | the three brand icons, plus [`CREDITS.md`](assets/CREDITS.md) |
-| `previews/` | rendered PNG of all 10 pages, so you can judge it without building |
-| [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
-| [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + timing, phone-readable |
-| `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build future slides from this.** |
+| `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 2 pages, `notes`, `design`, and the background art |
+| `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
+| `assets/` | brand icons (currently unused — see [`CREDITS.md`](assets/CREDITS.md)) |
+| `previews/` | rendered PNG of every page, so you can judge it without building |
+| [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
+| [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + the show-of-hands script, phone-readable |
 | `.agents/`, `.claude/` | open-slide's own authoring skills, shipped by the framework |

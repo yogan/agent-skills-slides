@@ -3,63 +3,55 @@
 Every judgement call the handoff left open, the changes made after the first review, and the
 two places I deviated from the handoff. Ordered roughly by how likely you are to disagree.
 
-## Changes made after the first review
+## Reset to a clean base
 
-**The pain page and the shape-of-the-solution page were cut**, on request — the deck went
-from 12 pages to 10. Both were pre-demo framing (the terminal↔browser zigzag, and the
-GitLab → agent → you flow diagram). What they carried is now spoken rather than shown: the
-title page is bare and the speaker frames the pain over it, and page 08 still makes the
-read-only point. The notes for page 01 carry the framing beats so nothing is lost silently.
+The deck was built out to 12 pages against the original outline, then pruned **back to two** —
+a title and one `/review-mr` slide — on request, to rebuild the content deliberately rather
+than edit an outline nobody had committed to.
 
-The `FlowRow` component that only the shape page used was removed with it.
+What went, and what that means:
 
-**The title page was rewritten to spec** and is deliberately the odd one out:
+- **Eight content pages** (`review-branch`, `explain-diff`, `explain-branch`, the two
+  `review-mr` pages, `rework-mr`, design principles, the rig, the wrap). Their content is not
+  lost — it is in git history, and the source material it came from is still in
+  `~/src/agent-skills`.
+- **Everything they alone used**: the `Steps` reveal, the code `Panel`, the topic table, the
+  numbered `Stage` flow, the section rail, the brand-logo imports, and the palette tokens that
+  only served them (`LINE`, `PANEL`, `SEV_CRITICAL`, `CODE_TEXT`, `CODE_LITERAL`). The file went
+  from 926 lines to 411.
+- **The `ACCENT` re-export**, now that nothing needs the accent outside a CSS variable. The
+  palette comment says to add it back rather than paste a hex.
 
-- eyebrow `/review-mr - /rework-mr`, then **Agentic Code Reviews**, then
-  `Frank Blendinger / Open Source Contributors @ ZAM / 2026-08-06`
-- **nothing else — no subtitle, no footer, no page number.** `Shell`'s `marker` prop is now
-  optional, and omitting it suppresses the footer entirely. That is the only page without
-  furniture; numbering on the rest is unaffected because `useSlidePageNumber()` counts pages,
-  so page 02 reads `02 / 10`.
-- the eyebrow does *not* use the shared `<Kicker>`: that style is tracked-out uppercase, which
-  looks wrong on lowercase command names. It gets its own tighter, larger mono style.
+What deliberately survived: the whole visual system (background art, palette, `Shell`,
+`Footer`, `SkillH`) and the theme bundle. That is the part worth keeping stable while the
+content churns — which is exactly why it was extracted into `themes/` first.
 
-## Deviations from the handoff
+**The assets are retained but unused.** `gitlab.svg`, `docker.svg` and `claude.svg` were the
+rig page's. They are 5 KB total, already licence-cleared, and likely to come back; deleting
+them would only mean re-fetching them offline later.
 
-### 1. Content is centred vertically, not pinned to the top
+### The `/review-mr` slide
 
-The handoff asked for consistent slide furniture. I first built every page top-aligned at
-120px, which gave a genuinely consistent heading anchor — and 200–350px of dead space under
-the sparser pages. It read as unfinished rather than airy.
+Five verbs, one line each — `explains · finds · adopts · tracks · drafts`. The list is
+deliberately shorter than what the skill does, because it has to be readable in the four
+minutes the speaker is talking over it while the real command runs. The last row carries the
+argument (**it drafts, you post**) and everything else is setup for it.
 
-So the content block is now vertically centred in the band above the footer. The **furniture**
-is still fixed: the footer marker and `NN / 10` sit at an identical absolute position on all
-nine pages that have one, which is the part the eye actually tracks between slides. Easy to revert — one
-`justifyContent` in `Shell`.
+## Deviations from the original handoff
 
-### 2. Page 8 is the only page with a stepped reveal
+### Content is centred vertically, not pinned to the top
 
-`<Steps>` is available and the handoff didn't ask for it. I used it on exactly one page — the
-design principles — because the third principle (printed > remembered) is the payoff and
-showing all three at once lets the room read ahead to it.
+The handoff asked for consistent slide furniture. Top-alignment left 200–350px of dead space
+under the sparser pages; it read as unfinished rather than airy. So the content block is
+vertically centred in the band above the footer. The **furniture** is still fixed: the footer
+marker and page number sit at an identical absolute position on every page that has one, which
+is the part the eye actually tracks between slides. One `justifyContent` in `Shell` to revert.
 
-The cost is real and you should know about it: **`→` on page 8 advances the reveal, not the
-page.** Three extra presses. It is documented in the README and flagged in the notes. Every
-other page is shown whole, which is the right default for a deck you talk over.
+### The title page has no furniture at all
 
-## Deck structure
-
-**10 pages.** The original build followed the handoff outline 1:1 at 12 pages; the two
-framing pages were then cut (above), leaving a title, one page per skill with `review-mr`
-split in two, principles, the rig and a wrap.
-
-The 4-minute opening window is now carried by pages 1–4, which is closer to a minute a page.
-That is fine for pages this sparse — the speaker is narrating, not reading — but it does put
-more weight on the title page, which is why its notes are the longest in the deck.
-
-**Pages 3, 4 and 9 are the designated cuts** if the talk runs late, and the notes say so. I
-flagged 9 (the rig) as the one to protect, following the runbook's own instinct that this
-crowd will want it.
+No footer, no page number, no subtitle — specified that way. `Shell`'s `marker` prop is
+optional and omitting it suppresses the footer. Numbering on the rest is unaffected, because
+`useSlidePageNumber()` counts pages rather than footers.
 
 ## Look and feel
 
@@ -157,8 +149,8 @@ asked for fonts to be vendored *if* needed — the cheaper answer was not to nee
 speaker's macOS machine this is SF Pro + SF Mono, which is exactly the intended look.
 
 **Glyphs verified rendering** in a real headless-Chrome capture, not assumed: `✎ ○ ◐ ● ⊘ ✓`
-and `🔴 🟠 🟡 🔵 💬`. The status legend on page 6 exists partly so the audience can decode the
-live demo, and partly as a standing check that these still render.
+and `🔴 🟠 🟡 🔵 💬`. None are on a slide at the moment — the pages that used them were pruned —
+but they are known-good in this font stack when the content comes back.
 
 ## Reuse: the theme bundle
 
@@ -221,13 +213,12 @@ says "in the repo's language" rather than naming one.
 
 ## Verification
 
-`npm run build` is clean. All 10 pages were rendered in headless Chrome at exactly 1920×1080
-in play mode and inspected — that is what `previews/` contains, and it is how the overflow and
-glyph checks were done rather than by trusting arithmetic. No page overflows the canvas.
+`npm run build` is clean. Every page is rendered in headless Chrome at exactly 1920×1080 in
+play mode and inspected — that is what `previews/` contains, and it is how the overflow and
+contrast checks were done rather than by trusting arithmetic. No page overflows the canvas.
 
-The stepped page is captured **fully revealed**: entered forward it starts empty, so a naive
-walk screenshots a blank slide and silently mis-indexes every page after it. Worth knowing if
-you regenerate the previews.
+If you add a page with `<Steps>`, note that it swallows an `ArrowRight` per reveal: a naive
+screenshot walk will capture it blank and silently mis-index every page after it.
 
 There is **no typecheck in CI or in the project** — TypeScript is not a dependency and the
 build uses esbuild, which strips types without checking them. Types here are authoring

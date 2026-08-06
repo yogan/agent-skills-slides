@@ -1,109 +1,61 @@
 # Speaker notes
 
 Same text as the `notes` export in the deck (which is what the presenter window shows on
-`P`) — this copy adds timing and the facts worth having in reach. **Edit both if you edit
+`P`) — this copy adds the detail that does not fit in a notes pane. **Edit both if you edit
 one.**
 
-The deck's job is the **0:00–4:00 window**, while `/review-mr !1` runs unattended. Pages 1–4
-are that window; 5–7 land during the demo; 8–10 are the wrap.
+> **State: clean base.** Two slides. The rest of the talk is being built back up
+> deliberately — see [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
 
 ---
 
 ## 0:00 — Page 01 · Title
 
-The command is already running behind this slide — **say that out loud**. It buys you the
-next four minutes and it sets up the whole talk.
+**Open with a show of hands.** Four questions, quick, no commentary between them:
 
-Introduce yourself fast, then frame the pain in your own words. The slide is deliberately
-bare, so this is all you:
+1. *Who here is using AI day to day?*
+2. *Who is now doing more code review than actual coding?*
+3. *Who does reviews with AI support already?*
+4. *Who uses dedicated tooling for it* — not just pasting a diff into a chat window?
 
-> The point is *not* that reviewing code is hard. It is the **shuttling** — terminal,
-> browser, clipboard, terminal — over and over, for days. I do both sides of this with an
-> agent anyway; I wanted to stop paying the context switch.
+Hands drop off sharply between 3 and 4. **That gap is the talk** — call it out as it happens
+rather than explaining it afterwards.
 
-Then the two hats: **reviewing someone else**, and **answering a review of my own**. That is
-the running order of the whole talk. Do not explain the skills yet.
+Then introduce yourself, fast. Do not explain the skills yet.
+
+## Page 02 · `/review-mr`
+
+### ▶ Start the command before you talk
+
+```
+/review-mr !1
+```
+
+**Kick it off the moment this slide is up.** It runs unattended for roughly **4 minutes**, so
+it has to be going before you start talking through the list — otherwise you arrive at the
+demo with nothing on screen.
+
+Pre-answer everything so it does not stop on a question:
+
+```
+/review-mr !1 — generate the explainer first, then seed findings with review-branch,
+then show me the overview and stop. Don't ask me anything before the overview.
+```
+
+### Then walk the five verbs
+
+Slowly — this is what fills the four minutes.
+
+| | |
+| --- | --- |
+| **explains** | `explain-branch` in the background: one chapter per substantial commit |
+| **finds** | `review-branch` seeds the findings — flat, severity-tagged, `file:line` |
+| **adopts** | a comment you type in the GitLab UI yourself becomes a tracked topic on the next `sync` |
+| **tracks** | author replies and pushes reconciled across days, force-pushes included |
+| **drafts** | it writes the comment; **you** paste it |
+
+**Land the last one.** It drafts, I post — read-only against GitLab. Everything else in the
+talk follows from that: the tone stays mine, and it never fights me for the browser.
 
 > Rehearsal fact if you want it: a bare `/review-mr !1` reached the parked overview in **4
 > minutes flat**, with 7 findings.
-
-## Page 02 · review-branch
-
-The boring one, and the foundation. Purely local: no GitLab, no network. Reads every commit
-since the branch left main, returns a flat severity-tagged list anchored at `file:line`.
-
-That CORS finding is real rehearsal output — and it is **one of the two flaws I planted**. If
-someone asks: wildcard origin *with* credentials is the classic misconfiguration.
-
-## Page 03 · explain-diff
-
-Different intent from review: **no findings at all**, just teaching. Writes one
-self-contained HTML file and opens it. Mention the quiz — people either love it or find it
-deeply strange, both are fine reactions.
-
-*Cuttable if you are running late.*
-
-## Page 04 · explain-branch
-
-This is the one running **right now**, so keep it short — they will see the real output in a
-minute. The interesting judgement is which commits earn a chapter: renames and reformats get
-a sentence folded into a neighbour, not a heading of their own.
-
-*Cuttable if you are running late.*
-
-## ~4:00 — hand over to the terminal
-
-From here the slides are punctuation. Come back to them between segments.
-
-## Page 05 · review-mr — the loop
-
-The centrepiece. Walk the five stages and **stress stage five: it drafts, I post.**
-
-Then the worktree detail, which developers always ask about — my checkout never moves. And
-the parallel-posting beat: a comment I typed in the browser myself shows up as a tracked
-topic on the next `sync`. That is *why* it is read-only — it never fights me for the browser.
-
-## Page 06 · review-mr — the multi-day part
-
-**The table is the money shot** — this is close to what they are about to see live. Point at
-t1 through t5, then the "2 pushes" line, then the glyph legend so they can read the real one.
-
-The line that matters is the last one: **the author resolving a thread is not a close. Only
-my ack is.**
-
-If asked about `diff t1`: the author said "reworked it" — this shows the actual change
-instead of making me trust the reply. Server-side, so force-pushes do not break it.
-
-## Page 07 · rework-mr
-
-Hat switch: now the review comments are pointed at me.
-
-The discipline is that **nothing gets coded until every thread has an agreed plan** —
-otherwise you fix the easy three and lose the argument on the hard one. And fixup rather than
-a new commit, so the branch stays reviewable.
-
-## Page 08 · Principles — **three reveals**
-
-`→` three times. Pace yourself.
-
-Read-only and state-in-files are quick. **Spend your time on the third:** instructions an
-agent must remember across many turns get dropped, but output it *printed* does not. That is
-why so much of this is rendered blocks — and why one rule is enforced by a `Stop` hook, after
-documenting it failed three times.
-
-This is the slide this audience came for.
-
-## Page 09 · The rig
-
-Credibility beat. Everything they just saw runs against a GitLab in Docker on this laptop,
-reset in twenty seconds. The MR is `bulletproof-react` PR #175 replayed commit for commit —
-**two flaws are genuinely upstream's**, which is the more interesting half.
-
-*Cuttable, but this crowd will want it — protect it over pages 03/04.*
-
-## Page 10 · Wrap
-
-One line per skill, then the repo. **Do not oversell:** personal toolset, `glab`-only,
-macOS-flavoured for the clipboard bits, and it needs the `Stop` hook.
-
-Then open the floor. The rig and the `Stop` hook are what people ask about.
