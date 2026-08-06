@@ -2,6 +2,10 @@ import type { ReactNode } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 import { Step, Steps } from '@open-slide/core';
 import goomba from '@assets/goomba.png';
+import zamMark from '@assets/zam.png';
+import iconGithub from '@assets/tabler-brand-github.svg';
+import iconMastodon from '@assets/tabler-brand-mastodon.svg';
+import iconMail from '@assets/tabler-mail.svg';
 
 export const design: DesignSystem = {
   // accent = "sunset gold". Warmer than the amber this deck started with (hue 40° → 35°),
@@ -136,6 +140,7 @@ const TEXTURE = [
 ].join(', ');
 
 const PAD = 120;
+const MARK_SLOT = 92; // fixed width for a leading mark, so both byline rows start on one axis
 
 /**
  * The synthwave perspective grid along the bottom edge, plus its horizon glow.
@@ -296,22 +301,7 @@ const SkillH = ({ name }: { name: string }) => (
 // Deliberately bare: eyebrow, title, byline. No footer, no page number, nothing else.
 const Title: Page = () => (
   <Shell>
-    {/* Tighter tracking than the theme's standard eyebrow: that one is tracked-out
-        uppercase, which reads badly on lowercase command names. The colour split is
-        the house pattern — accent slash, plain text for the name. */}
-    <div
-      style={{
-        fontFamily: MONO,
-        fontSize: 36,
-        lineHeight: 1.2,
-        color: 'var(--osd-text)',
-        letterSpacing: '0.02em',
-      }}
-    >
-      <span style={{ color: 'var(--osd-accent)' }}>/</span>review-mr
-      <span style={{ color: DIM, margin: '0 18px' }}>·</span>
-      <span style={{ color: 'var(--osd-accent)' }}>/</span>rework-mr
-    </div>
+    <CommandPair sep="·" />
     <h1
       style={{
         fontFamily: 'var(--osd-font-display)',
@@ -324,6 +314,8 @@ const Title: Page = () => (
     >
       Agentic Code Reviews
     </h1>
+    {/* Both byline rows lead with a mark in a fixed-width slot, so the text still starts on
+        one axis even though the two marks are different shapes. */}
     <div
       style={{
         marginTop: 56,
@@ -333,23 +325,36 @@ const Title: Page = () => (
         lineHeight: 1.4,
         display: 'flex',
         flexDirection: 'column',
-        gap: 22,
+        gap: 26,
       }}
     >
-      <div>
-        Frank Blendinger
-        <span style={{ color: DIM, margin: '0 22px' }}>·</span>
-        <span style={{ color: 'var(--osd-accent)' }}>@</span>yogan
+      <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+        <span style={{ width: MARK_SLOT, display: 'flex', flexShrink: 0 }}>
+          <img src={goomba} alt="" style={{ width: 44, height: 44, borderRadius: 8 }} />
+        </span>
+        <span>
+          Frank Blendinger
+          <span style={{ color: DIM, margin: '0 22px' }}>·</span>
+          <Hat>@</Hat>yogan
+        </span>
       </div>
-      <div>
-        Open Source Contributors @ ZAM
-        <span style={{ color: DIM, margin: '0 22px' }}>·</span>
-        2026-08-06
+      <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+        <span style={{ width: MARK_SLOT, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          {/* The official ZAM mark ships as black-on-white JPEG — no alpha to mask, and
+              blend modes cannot reach the background from inside the content layer's own
+              stacking context. So it is pre-converted to a tight white-on-transparent PNG
+              (see assets/CREDITS.md) and masked like every other icon. 250x80 source. */}
+          <Icon src={zamMark} height={28} width={88} color={MUTED} />
+        </span>
+        <span>
+          Open Source Contributors
+          <span style={{ color: DIM, margin: '0 22px' }}>·</span>
+          2026-08-06
+        </span>
       </div>
     </div>
   </Shell>
 );
-
 
 // ── 02 · review-mr ───────────────────────────────────────────────────────────
 
@@ -432,6 +437,66 @@ const Intro = ({ children }: { children: ReactNode }) => (
   >
     {children}
   </p>
+);
+
+/**
+ * Line icon, coloured from the palette rather than from the file. The sources are
+ * unmodified tabler outline SVGs (`stroke="currentColor"`, which renders black in an
+ * `<img>`); masking uses only their alpha, so the colour comes from here.
+ *
+ * The url() MUST be quoted: Vite inlines these as data URIs and rewrites their attribute
+ * quotes to apostrophes, which an unquoted CSS url() token cannot contain — the declaration
+ * gets dropped and you get a solid coloured box.
+ */
+const Icon = ({
+  src,
+  height,
+  width = height,
+  color,
+}: {
+  src: string;
+  height: number;
+  width?: number;
+  color: string;
+}) => (
+  <span
+    aria-hidden="true"
+    style={{
+      display: 'block',
+      width,
+      height,
+      flexShrink: 0,
+      backgroundColor: color,
+      WebkitMaskImage: `url("${src}")`,
+      maskImage: `url("${src}")`,
+      WebkitMaskSize: 'contain',
+      maskSize: 'contain',
+      WebkitMaskRepeat: 'no-repeat',
+      maskRepeat: 'no-repeat',
+      WebkitMaskPosition: 'center',
+      maskPosition: 'center',
+    }}
+  />
+);
+
+/**
+ * The two commands, shown on the title and repeated on the closing slide so the talk
+ * bookends itself. Same component both times, so they cannot drift apart.
+ */
+const CommandPair = ({ sep }: { sep: string }) => (
+  <div
+    style={{
+      fontFamily: MONO,
+      fontSize: 36,
+      lineHeight: 1.2,
+      color: 'var(--osd-text)',
+      letterSpacing: '0.02em',
+    }}
+  >
+    <Hat>/</Hat>review-mr
+    <span style={{ color: DIM, margin: '0 18px' }}>{sep}</span>
+    <Hat>/</Hat>rework-mr
+  </div>
 );
 
 /** The one word in an intro line that names which hat you are wearing. */
@@ -588,63 +653,78 @@ const ReworkMr: Page = () => (
 
 // ── 04 · Outro ───────────────────────────────────────────────────────────────
 
-const Contact = ({ children }: { children: ReactNode }) => (
-  <div style={{ fontFamily: MONO, fontSize: 42, lineHeight: 1.3, color: 'var(--osd-text)' }}>
-    {children}
+const Contact = ({ icon, children }: { icon: string; children: ReactNode }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 26 }}>
+    <Icon src={icon} height={40} color={MUTED} />
+    <span style={{ fontFamily: MONO, fontSize: 40, lineHeight: 1.3, color: 'var(--osd-text)' }}>
+      {children}
+    </span>
   </div>
 );
 
+/**
+ * Closing slide. The only centred page in the deck — everything else hangs off the 120px
+ * left axis, but a closer is the one place a ceremonial, symmetrical layout earns its keep,
+ * and the two blocks ("me" and the warnings) read as a pair when they share a centre line.
+ */
 const Outro: Page = () => (
   <Shell>
-    <H>Agentic Code Reviews</H>
-
-    <div style={{ marginTop: 121, display: 'flex', alignItems: 'center', gap: 72 }}>
-      {/* Rounded square rather than a circle: it is pixel art, and a circular crop
-          fights the grid the artwork is drawn on. */}
-      <img
-        src={goomba}
-        alt=""
-        style={{ width: 220, height: 220, borderRadius: 20, flexShrink: 0 }}
-      />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
-        <Contact>
-          github.com/yogan/<Hat>agent-skills</Hat>
-        </Contact>
-        <Contact>
-          chaos.social/<Hat>@</Hat>yogan
-        </Contact>
-        <Contact>
-          fb<Hat>@</Hat>zogan.de
-        </Contact>
-      </div>
-    </div>
-
-    {/* inline-flex so the box hugs its text — a full-width rule would read as a banner
-        rather than an aside. U+FE0E forces the text presentation of the warning sign;
-        without it the glyph renders as a colour emoji and shouts. */}
     <div
-      style={{
-        marginTop: 76,
-        alignSelf: 'flex-start',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 22,
-        padding: '20px 34px',
-        background: PANEL,
-        border: `1px solid ${LINE}`,
-        borderRadius: 'var(--osd-radius)',
-        fontSize: 32,
-        lineHeight: 1.4,
-        color: MUTED,
-      }}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}
     >
-      <span aria-hidden="true" style={{ fontSize: 34, color: DIM }}>
-        {'\u26A0\uFE0E'}
-      </span>
-      <span>
-        work in progress · highly personalised ·{' '}
-        <code style={{ fontFamily: MONO }}>glab</code>-only · vibe coded
-      </span>
+      <H>Agentic Code Reviews</H>
+      <div style={{ marginTop: 26 }}>
+        <CommandPair sep="&&" />
+      </div>
+
+      {/* block 1 — me */}
+      <div style={{ marginTop: 92, display: 'flex', alignItems: 'center', gap: 60 }}>
+        {/* Rounded square rather than a circle: it is pixel art, and a circular crop
+            fights the grid the artwork is drawn on. */}
+        <img
+          src={goomba}
+          alt=""
+          style={{ width: 200, height: 200, borderRadius: 18, flexShrink: 0 }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 26, textAlign: 'left' }}>
+          <Contact icon={iconGithub}>
+            github.com/yogan/<Hat>agent-skills</Hat>
+          </Contact>
+          <Contact icon={iconMastodon}>
+            chaos.social/<Hat>@</Hat>yogan
+          </Contact>
+          <Contact icon={iconMail}>
+            fb<Hat>@</Hat>zogan.de
+          </Contact>
+        </div>
+      </div>
+
+      {/* block 2 — warnings. inline-flex so the box hugs its text instead of reading as a
+          full-width banner. U+FE0E forces the text presentation of the warning sign;
+          without it the glyph renders as a colour emoji and shouts. */}
+      <div
+        style={{
+          marginTop: 84,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 22,
+          padding: '20px 34px',
+          background: PANEL,
+          border: `1px solid ${LINE}`,
+          borderRadius: 'var(--osd-radius)',
+          fontSize: 32,
+          lineHeight: 1.4,
+          color: MUTED,
+        }}
+      >
+        <span aria-hidden="true" style={{ fontSize: 34, color: DIM }}>
+          {'\u26A0\uFE0E'}
+        </span>
+        <span>
+          work in progress · highly personalised ·{' '}
+          <code style={{ fontFamily: MONO }}>glab</code>-only · vibe coded
+        </span>
+      </div>
     </div>
   </Shell>
 );

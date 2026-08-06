@@ -15,7 +15,45 @@ that the character is Nintendo's; this is a personal avatar in a conference talk
 commercial use, and it is the speaker's call rather than a licence question this repo can
 settle.
 
-## Icons — currently unused
+## Logos and icons — in use
+
+### ZAM wordmark
+
+`zam.png` — the official ZAM mark from [zam.haus](https://zam.haus), the stylised "ZAM"
+wordmark (their file is named `ZAM_ohne_Text-Logo-square`, but the mark *is* the wordmark).
+Trademark of ZAM e.V., used nominatively to name the venue.
+
+**Derived, not the original file.** Upstream ships black-on-white JPEG — no alpha to mask, and
+a `mix-blend-mode` trick cannot reach the slide background from inside the content layer's own
+stacking context. So it was converted once to a tight white-on-transparent PNG (300 × 300 →
+cropped 250 × 80) and is masked like every other icon, taking its colour from the palette.
+
+The conversion used headless Chrome as an image decoder: draw to a canvas, set
+`alpha = 1 − luminance` with a small contrast stretch so JPEG ringing does not leave a grey
+haze, force RGB to white, then crop to the glyph's bounding box. To redo it, re-fetch
+`https://www.zam.haus/wp-content/uploads/2022/05/cropped-ZAM_ohne_Text-Logo-square-300x300.jpg`
+and repeat that recipe.
+
+### Line icons
+
+From [Tabler Icons](https://tabler.io/icons) v3.46.0, **MIT** — the outline set, so all three
+share one stroke weight.
+
+| File | Icon | Used for |
+| --- | --- | --- |
+| `tabler-brand-github.svg` | `brand-github` | the repo link |
+| `tabler-brand-mastodon.svg` | `brand-mastodon` | the Mastodon handle |
+| `tabler-mail.svg` | `mail` | the mail address |
+
+Committed **unmodified**. They are stroke-based with `stroke="currentColor"`, which renders
+black inside an `<img>`, so the deck applies them as CSS masks and paints the palette colour
+through them.
+
+> **Gotcha.** Vite inlines these as data URIs and rewrites their attribute quotes to
+> apostrophes. An unquoted CSS `url()` token cannot contain an apostrophe, so `url(${src})` is
+> silently dropped and you get a solid coloured box. Quote it: `url("${src}")`.
+
+## Brand icons — currently unused
 
 > These were the rig slide's; that page was pruned when the deck was reset to a clean base.
 > They are kept because they are tiny, already licence-cleared, and likely to come back —

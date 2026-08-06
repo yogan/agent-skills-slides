@@ -67,7 +67,7 @@ the deck and use the **Export** menu in the slide toolbar:
 | 01 | Title | — |
 | 02 | `/review-mr` — reviewing someone else's MR | 5 |
 | 03 | `/rework-mr` — answering the review of your own | 5 |
-| 04 | Outro — repo, contact, caveat | — |
+| 04 | Outro — repo, contact, caveat (the one centred page) | — |
 
 There is **no slide furniture at all** — no footer, no page numbers, no running topic marker.
 
@@ -129,7 +129,7 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 | `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 4 pages, `notes`, `design`, and the background art |
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
-| `assets/` | the avatar, plus three unused brand icons — see [`CREDITS.md`](assets/CREDITS.md) |
+| `assets/` | avatar, ZAM mark, three line icons, plus three unused brand icons — see [`CREDITS.md`](assets/CREDITS.md) |
 | `previews/` | rendered PNG of every page — plus `*-intro.png` for the skill pages as they first appear, before any row reveals |
 | [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
 | [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + the show-of-hands script, phone-readable |
