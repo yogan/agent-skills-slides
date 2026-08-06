@@ -338,17 +338,31 @@ const Title: Page = () => (
 
 // ── 02 · review-mr ───────────────────────────────────────────────────────────
 
-// `skill` names the other skill in the repo that does the work, so the audience can
-// see review-mr is a composition rather than one monolith.
-const Row = ({ label, note, skill }: { label: string; note: string; skill?: string }) => (
+/**
+ * The right-hand annotation. A value starting with `/` is another skill from the same
+ * repo doing the work, so it renders as a command — monospace, accent slash, matching
+ * how command names appear everywhere else. Anything else is prose, so it renders in
+ * sans: the house rule is that monospace is only for things you could actually type.
+ */
+const Aside = ({ text }: { text: string }) =>
+  text.startsWith('/') ? (
+    <span style={{ fontFamily: MONO, fontSize: 26, color: MUTED }}>
+      <span style={{ color: 'var(--osd-accent)' }}>/</span>
+      {text.slice(1)}
+    </span>
+  ) : (
+    <span style={{ fontSize: 28, color: MUTED }}>{text}</span>
+  );
+
+const Row = ({ label, note, aside }: { label: string; note: string; aside?: string }) => (
   <div style={{ display: 'flex', alignItems: 'baseline', gap: 48, height: 76 }}>
     <span style={{ fontFamily: MONO, fontSize: 32, color: 'var(--osd-accent)', width: 360 }}>
       {label}
     </span>
-    {/* Fixed note width rather than flex, so the skill names form their own column
-        right next to the text they annotate instead of drifting to the canvas edge. */}
+    {/* Fixed note width rather than flex, so the asides form their own column right
+        next to the text they annotate instead of drifting to the canvas edge. */}
     <span style={{ width: 660, fontSize: 36, color: BODY }}>{note}</span>
-    <span style={{ fontFamily: MONO, fontSize: 26, color: MUTED }}>{skill}</span>
+    {aside ? <Aside text={aside} /> : null}
   </div>
 );
 
@@ -357,10 +371,10 @@ const ReviewMr: Page = () => (
     <SkillH name="review-mr" sub="reviewing someone else's MR" />
 
     <div style={{ marginTop: 64 }}>
-      <Row label="explainer" note="the branch, commit by commit" skill="/explain-branch" />
-      <Row label="agent review" note="findings, severity-tagged" skill="/review-branch" />
-      <Row label="human review" note="the comments you write yourself" />
-      <Row label="tracking" note="replies and pushes" />
+      <Row label="explainer" note="a blog-style article for context" aside="/explain-branch" />
+      <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
+      <Row label="human review" note="the comments you write yourself" aside="synced into the agent session" />
+      <Row label="follow-up" note="which topics are resolved" aside="per-topic diffs · your ack closes" />
       <Row label="drafting" note="support for writing good findings" />
     </div>
   </Shell>
@@ -370,7 +384,7 @@ export const notes: (string | undefined)[] = [
   // 01 Title
   'Show of hands, four questions, quick: Who here is using AI day to day? Who is now doing more code review than actual coding? Who does reviews with AI support already? And who uses dedicated tooling for it — not just pasting a diff into a chat window? Read the room off the last two; that gap is the talk.',
   // 02 review-mr
-  '▶ START `/review-mr !1` NOW — it runs unattended for about 4 minutes, so it has to be going before you talk through this list. Then walk the five rows, slowly. Point out that two of them are other skills from the same repo doing the work — review-mr composes, it is not one monolith. The pair that matters is agent review and human review: findings the agent produced, and comments I wrote myself in the browser, tracked side by side in one list.',
+  '▶ START `/review-mr !1` NOW — it runs unattended for about 4 minutes, so it has to be going before you talk through this list. Then walk the five rows, slowly. Two of them are other skills from the same repo doing the work: review-mr composes, it is not one monolith. The pair that matters is agent review and human review — findings the agent produced, and comments I wrote by hand in the browser, synced into the same list and tracked the same way. On follow-up: the agent can tell me which topics are actually resolved and show me the diff per topic, but only my ack closes one — the author resolving a thread does not.',
 ];
 
 export const meta: SlideMeta = {
