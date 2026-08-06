@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
+import { Step, Steps } from '@open-slide/core';
 
 export const design: DesignSystem = {
   // accent = "sunset gold". Warmer than the amber this deck started with (hue 40° → 35°),
@@ -334,6 +335,48 @@ const Title: Page = () => (
 // ── 02 · review-mr ───────────────────────────────────────────────────────────
 
 /**
+ * Stepped-reveal motion for the row lists.
+ *
+ * `<Step>` only animates opacity, and it keeps its children mounted — so a `@keyframes`
+ * animation would fire at page mount, not at reveal. What it does give us is a
+ * `data-osd-step="revealed|pending"` attribute on its wrapper, and a *transition* against
+ * that attribute fires exactly when it flips. So the framework keeps owning the fade and
+ * the keyboard handling, and this adds the movement on top.
+ *
+ * Scoped under `.acr-reveal` because any CSS loaded here is global.
+ *
+ * The row rises as it fades in; the accent label settles in from the left a beat behind it,
+ * which leans on the deck's left axis instead of fighting it. 18px / 12px and 320ms sit
+ * just above the theme's transition band — a reveal you deliberately trigger can carry a
+ * little more than an automatic page change.
+ */
+const REVEAL_CSS = `
+.acr-reveal [data-osd-step] .acr-row,
+.acr-reveal [data-osd-step] .acr-label {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.acr-reveal [data-osd-step] .acr-label { transition-delay: 60ms; }
+.acr-reveal [data-osd-step='pending'] .acr-row { transform: translateY(18px); }
+.acr-reveal [data-osd-step='pending'] .acr-label { transform: translateX(-12px); }
+.acr-reveal [data-osd-step='revealed'] .acr-row,
+.acr-reveal [data-osd-step='revealed'] .acr-label { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .acr-reveal [data-osd-step] .acr-row,
+  .acr-reveal [data-osd-step] .acr-label { transition: none; transform: none; }
+}
+`;
+
+const RevealStyles = () => <style>{REVEAL_CSS}</style>;
+
+/** Wraps the rows so each one reveals on its own `→`. */
+const RevealList = ({ children }: { children: ReactNode }) => (
+  <div className="acr-reveal" style={{ marginTop: 121 }}>
+    <RevealStyles />
+    <Steps>{children}</Steps>
+  </div>
+);
+
+/**
  * The right-hand annotation. A value starting with `/` is another skill from the same
  * repo doing the work, so it renders as a command — monospace, accent slash, matching
  * how command names appear everywhere else. Anything else is prose, so it renders in
@@ -350,8 +393,17 @@ const Aside = ({ text }: { text: string }) =>
   );
 
 const Row = ({ label, note, aside }: { label: string; note: string; aside?: string }) => (
-  <div style={{ display: 'flex', alignItems: 'baseline', gap: 48, height: 76 }}>
-    <span style={{ fontFamily: MONO, fontSize: 32, color: 'var(--osd-accent)', width: 360 }}>
+  <div className="acr-row" style={{ display: 'flex', alignItems: 'baseline', gap: 48, height: 76 }}>
+    <span
+      className="acr-label"
+      style={{
+        fontFamily: MONO,
+        fontSize: 32,
+        color: 'var(--osd-accent)',
+        width: 360,
+        display: 'inline-block',
+      }}
+    >
       {label}
     </span>
     {/* Fixed note width rather than flex, so the asides form their own column right
@@ -365,20 +417,30 @@ const ReviewMr: Page = () => (
   <Shell>
     <SkillH name="review-mr" />
 
-    <div style={{ marginTop: 121 }}>
-      {/* Order is the actual chronology of a review: understand it, let the agent find
-          things, add your own, write the comments — and only then, on later passes,
-          reconcile what came back. */}
-      <Row label="explainer" note="a blog-style article for context" aside="/explain-branch" />
-      <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
-      <Row label="human review" note="the comments you write yourself" aside="synced into the agent session" />
-      <Row label="drafting" note="support for writing good findings" aside="copy markdown to clipboard" />
-      <Row
-        label="follow-up"
-        note="pushes with diffstats, resolved topics"
-        aside="agent detects · you ack"
-      />
-    </div>
+    {/* Order is the actual chronology of a review: understand it, let the agent find
+        things, add your own, write the comments — and only then, on later passes,
+        reconcile what came back. */}
+    <RevealList>
+      <Step duration={320}>
+        <Row label="explainer" note="a blog-style article for context" aside="/explain-branch" />
+      </Step>
+      <Step duration={320}>
+        <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
+      </Step>
+      <Step duration={320}>
+        <Row label="human review" note="the comments you write yourself" aside="synced into the agent session" />
+      </Step>
+      <Step duration={320}>
+        <Row label="drafting" note="support for writing good findings" aside="copy markdown to clipboard" />
+      </Step>
+      <Step duration={320}>
+        <Row
+          label="follow-up"
+          note="pushes with diffstats, resolved topics"
+          aside="agent detects · you ack"
+        />
+      </Step>
+    </RevealList>
   </Shell>
 );
 
@@ -393,14 +455,24 @@ const ReworkMr: Page = () => (
   <Shell>
     <SkillH name="rework-mr" />
 
-    <div style={{ marginTop: 121 }}>
-      {/* No sub-skills on this one — every aside is prose, so none render as commands. */}
-      <Row label="threads" note="the reviewer's open topics" aside="one list, one plan per MR" />
-      <Row label="grilling" note="every topic argued to a plan first" aside="no code until all are planned" />
-      <Row label="fixing" note="failing test first, then the fix" aside="fixup into the introducing commit" />
-      <Row label="pushing" note="force-push, then a stable diff URL" aside="never a commit link" />
-      <Row label="replies" note="one per thread, in its language" aside="copy or post" />
-    </div>
+    {/* No sub-skills on this one — every aside is prose, so none render as commands. */}
+    <RevealList>
+      <Step duration={320}>
+        <Row label="threads" note="the reviewer's open topics" aside="one list, one plan per MR" />
+      </Step>
+      <Step duration={320}>
+        <Row label="grilling" note="every topic argued to a plan first" aside="no code until all are planned" />
+      </Step>
+      <Step duration={320}>
+        <Row label="fixing" note="failing test first, then the fix" aside="fixup into the introducing commit" />
+      </Step>
+      <Step duration={320}>
+        <Row label="pushing" note="force-push, then a stable diff URL" aside="never a commit link" />
+      </Step>
+      <Step duration={320}>
+        <Row label="replies" note="one per thread, in its language" aside="copy or post" />
+      </Step>
+    </RevealList>
   </Shell>
 );
 

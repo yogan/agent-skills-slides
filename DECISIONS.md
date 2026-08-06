@@ -37,6 +37,29 @@ deliberately shorter than what the skill does, because it has to be readable in 
 minutes the speaker is talking over it while the real command runs. The last row carries the
 argument (**it drafts, you post**) and everything else is setup for it.
 
+## Stepped reveals on the skill pages
+
+The five rows on each skill page come in one `→` at a time.
+
+`<Step>` only animates opacity and keeps its children mounted, so a `@keyframes` entrance
+would fire at page mount rather than at reveal. What it does expose is a
+`data-osd-step="revealed|pending"` attribute on its wrapper — and a CSS *transition* against
+that attribute fires exactly when it flips. So the framework keeps owning the fade, the
+keyboard handling and the reduced-motion fallback, and a scoped stylesheet adds the movement:
+the row rises 18px as it fades in, and the accent label settles in from the left 60ms behind
+it, leaning on the deck's left axis instead of fighting it.
+
+320ms sits just above the theme's 140–280ms transition band. A reveal you deliberately
+trigger can carry a little more weight than an automatic page change.
+
+**The cost is keypresses:** a stepped page takes 6 `→` instead of 1, 13 for the whole deck.
+That is real during a live demo and is called out in the README.
+
+Verified by driving Present mode in headless Chrome and reading the step attributes: 5 pending
+on entry, one flipping per press, then the page advancing on the sixth. Checked in **both**
+`npm run dev` and the production build — an earlier reading that production was broken was an
+artefact of the probe never actually entering Present mode.
+
 ## Deviations from the original handoff
 
 ### Content is centred vertically, not pinned to the top

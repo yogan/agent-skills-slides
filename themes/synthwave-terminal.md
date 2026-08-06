@@ -226,9 +226,36 @@ handle take the accent, the word after it does not.
 
 ## Motion
 
-**Static.** No page transitions — open-slide has no default and snap-swap is tasteful; a deck
-driven mid-live-demo does not want motion it can trip over. The only movement is `<Steps>`
-reveals, used sparingly (one page in ten) where the *order* of ideas is the point.
+**No page transitions.** open-slide has no default and snap-swap is tasteful; a deck driven
+mid-live-demo does not want motion it can trip over.
+
+The one exception is `<Steps>` reveals on list pages, where the order of ideas is the point.
+`<Step>` animates opacity only, but it stamps `data-osd-step="revealed|pending"` on its
+wrapper — transition against that attribute to add movement without losing the framework's
+keyboard handling or its reduced-motion fallback:
+
+```css
+/* scope under your own class: any CSS loaded from a slide is global */
+.acr-reveal [data-osd-step] .acr-row,
+.acr-reveal [data-osd-step] .acr-label {
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.acr-reveal [data-osd-step] .acr-label { transition-delay: 60ms; }
+.acr-reveal [data-osd-step='pending'] .acr-row   { transform: translateY(18px); }
+.acr-reveal [data-osd-step='pending'] .acr-label { transform: translateX(-12px); }
+.acr-reveal [data-osd-step='revealed'] .acr-row,
+.acr-reveal [data-osd-step='revealed'] .acr-label { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .acr-reveal [data-osd-step] .acr-row,
+  .acr-reveal [data-osd-step] .acr-label { transition: none; transform: none; }
+}
+```
+
+A `@keyframes` animation will **not** work here: `<Step>` keeps its children mounted, so it
+would run at page mount rather than at reveal.
+
+Reveals only run in **Present mode**; the editing viewer shows pages fully composed. Budget
+the keypresses — a five-row page costs six `→`.
 
 ## Aesthetic
 

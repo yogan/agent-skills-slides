@@ -23,7 +23,7 @@ previews it live from `themes/synthwave-terminal.demo.tsx`.
 
 ```bash
 npm install     # once
-npm run dev     # → http://localhost:5173
+npm run dev     # → http://localhost:8181
 ```
 
 Open the slide **Agentic Code Reviews**, then:
@@ -32,8 +32,8 @@ Open the slide **Agentic Code Reviews**, then:
 | --- | --- |
 | `F` | fullscreen play mode — **this is what you present from** |
 | `P` | presenter window: current page, next page, **speaker notes**, elapsed timer |
-| `→` / `Space` | next page |
-| `←` | previous page |
+| `→` / `Space` | next reveal, then next page |
+| `←` | previous reveal, then previous page |
 | `Esc` | leave play mode |
 
 Put the presenter window on the laptop and mirror play mode to the projector.
@@ -62,13 +62,29 @@ the deck and use the **Export** menu in the slide toolbar:
 
 ## The pages
 
-| # | Page |
-| --- | --- |
-| 01 | Title |
-| 02 | `/review-mr` — reviewing someone else's MR |
-| 03 | `/rework-mr` — answering the review of your own |
+| # | Page | Reveals |
+| --- | --- | --- |
+| 01 | Title | — |
+| 02 | `/review-mr` — reviewing someone else's MR | 5 |
+| 03 | `/rework-mr` — answering the review of your own | 5 |
 
 There is **no slide furniture at all** — no footer, no page numbers, no running topic marker.
+
+### The rows reveal one at a time
+
+Each skill page arrives empty except its heading, and every `→` brings in the next row — so a
+stepped page costs **6** presses, not 1. That is 13 from the title to the end of the deck.
+Worth one dry run before you present.
+
+Two consequences of how open-slide implements this:
+
+- **Reveals only happen in Present mode** (`F`). In the editing viewer, pages render fully
+  composed — that is the framework's behaviour for a page you jump into, not a bug.
+- **Entering a page backwards shows it complete.** Walking back from page 3 to page 2 lands on
+  page 2 with all five rows already up, rather than making you press `→` five times again.
+
+To drop the reveals on a page, delete its `<Step>` wrappers and the `<RevealList>`; the rows
+render as a plain list.
 
 ## Speaker notes
 
