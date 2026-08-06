@@ -62,21 +62,24 @@ the deck and use the **Export** menu in the slide toolbar:
 
 ## The pages
 
-| # | Page | Reveals |
-| --- | --- | --- |
-| 01 | Title | — |
-| 02 | `/review-mr` — reviewing someone else's MR | 5 |
-| 03 | `/rework-mr` — answering the review of your own | 5 |
-| 04 | Outro — repo, contact, caveat (the one centred page) | — |
+| # | Page | Reveals | Presses |
+| --- | --- | --- | --- |
+| 01 | Title (centred) | — | 1 |
+| 02 | `/review-mr Skill` | 5 | 6 |
+| 03 | `/rework-mr Skill` | 5 | 6 |
+| 04 | Outro — repo, contact, caveat (centred) | 2 | 2 |
+
+**15 `→` presses** from the title to the end of the deck.
 
 There is **no slide furniture at all** — no footer, no page numbers, no running topic marker.
 
-### The rows reveal one at a time
+### Content reveals on click
 
 Each skill page arrives showing its heading and a one-line description of the skill. The
-description **fades out as the first row arrives**, and every `→` brings in the next row — so a
-stepped page costs **6** presses, not 1. That is 14 from the title to the end of the deck.
-Worth one dry run before you present.
+description **fades out as the first row arrives**, and every `→` brings in the next row. The
+closing slide does the same with two blocks: contact details, then the caveat.
+
+Worth one dry run before you present — the press counts are in the table above.
 
 Two consequences of how open-slide implements this:
 
