@@ -67,7 +67,8 @@ crowd will want it.
 | --- | --- | --- |
 | Background | `#0A0716` | Deep violet-black. True black bands badly on projectors, and the violet is what lets the neon read as neon. |
 | Text | `#E8EDF2` | 16.9:1 on the flat base. |
-| **Accent** | `#FFC24B` amber | One accent for everything readable. 12.4:1 on the base. |
+| **Accent** | `#FFAE3D` sunset gold | One accent for everything readable. 10.8:1 on the base, 7.3:1 worst case. Warmer than the amber the deck started with (hue 40° → 35°) so it sits in the same family as the horizon glow. |
+| Body | `#C9D5E1` (13.4:1) | Secondary body copy, table cells. |
 | Muted | `#98A6BC` (8.1:1), dim `#6E7C95` (4.7:1) | Both lifted when the background went synthwave, so secondary text keeps its margin over a busier canvas. |
 | Display / body | system sans (SF Pro on the speaker's Mac) | Heavy weights (800–850) for headings. |
 | Monospace | SF Mono / Menlo stack | Used for **anything you could actually type** — skill names, file paths, commands, the topic table. That is the whole "nerdy" budget. |
@@ -81,9 +82,12 @@ Requested after the first pass, and built to stay projector-safe:
 - **Neon is background-only.** Magenta `#FF2DAA` and cyan `#00D9FF` appear in blooms and the
   floor grid — **never in text**. So the readable palette is still one accent (amber), which
   is also why the severity glyphs (🔴🟠🟡🔵) still don't compete with anything.
-- **Amber survived the reskin** rather than being swapped for the genre-typical magenta:
-  sunset amber is squarely synthwave anyway, and it keeps the accent distinct from the
-  background neon.
+- **The accent stayed warm** rather than being swapped for the genre-typical magenta or cyan.
+  Those two are already carrying the background, so an accent in either would blend into it;
+  warm is the hue that still stands out. It was then *retuned* from amber `#FFC24B` to sunset
+  gold `#FFAE3D` — hue 40° → 35°, close to the 25° horizon glow — so it reads as the sun in
+  the scene rather than as an unrelated warning yellow. In the synthwave sunset gradient
+  (gold → orange → hot pink) it is the canonical partner to the magenta.
 - **The blooms sit in the corners**, so the middle of the canvas — where the text is — stays
   near the flat base. Worst case, inside the brightest bloom overlap, is **11.4:1 for text and
   8.3:1 for the accent** (measured, not estimated).
@@ -155,6 +159,29 @@ speaker's macOS machine this is SF Pro + SF Mono, which is exactly the intended 
 **Glyphs verified rendering** in a real headless-Chrome capture, not assumed: `✎ ○ ◐ ● ⊘ ✓`
 and `🔴 🟠 🟡 🔵 💬`. The status legend on page 6 exists partly so the audience can decode the
 live demo, and partly as a standing check that these still render.
+
+## Reuse: the theme bundle
+
+The palette is not just consts in one slide file. `themes/synthwave-terminal.md` +
+`themes/synthwave-terminal.demo.tsx` are the repo's house style, and the deck declares
+`meta.theme: 'synthwave-terminal'` so it links back to them.
+
+That is open-slide's own mechanism rather than something invented here: `/create-slide` reads
+the markdown and offers the theme as a picker option, and the dev UI's **Themes** panel
+renders the demo as a live preview. A slide cannot import from another slide (one `index.tsx`
+plus `assets/`, no shared modules), so a documented, paste-ready theme is the *only* way to
+keep future decks consistent.
+
+Inside the deck, every colour now resolves to one place:
+
+- `design.palette` drives the `var(--osd-*)` variables and the Design panel.
+- `BG` / `ACCENT` re-read `design.palette` for the spots a CSS variable cannot reach — SVG
+  attributes and JS conditionals. Previously the accent hex was hardcoded in six of those.
+- The neon lives as bare `r,g,b` triplets, so the background blooms and the grid strokes
+  derive from the same values instead of repeating them.
+
+Change the accent in `design.palette` and the footer square, the eyebrows, the `/` sigils, the
+topic-table states and the panel rule all follow.
 
 ## Content accuracy
 

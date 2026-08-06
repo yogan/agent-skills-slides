@@ -6,7 +6,10 @@ import dockerLogo from '@assets/docker.svg';
 import claudeLogo from '@assets/claude.svg';
 
 export const design: DesignSystem = {
-  palette: { bg: '#0A0716', text: '#E8EDF2', accent: '#FFC24B' },
+  // accent = "sunset gold". Warmer than the amber this deck started with (hue 40° → 35°),
+  // which pulls it into the same family as the sunset bloom at the bottom of the canvas
+  // and reads as the sun in the synthwave scene rather than as a warning yellow.
+  palette: { bg: '#0A0716', text: '#E8EDF2', accent: '#FFAE3D' },
   fonts: {
     display: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
     body: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
@@ -15,17 +18,40 @@ export const design: DesignSystem = {
   radius: 10,
 };
 
-// Outside the DesignSystem shape, so plain consts.
-const MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace';
-const MUTED = '#98A6BC';
-const DIM = '#6E7C95';
-const LINE = '#241C3C';
-const PANEL = '#130E24';
+// ── Palette ──────────────────────────────────────────────────────────────────
+// Single source of truth. `design.palette` above drives the `var(--osd-*)` CSS
+// variables (and the dev UI's Design panel); these re-export the same values for
+// the places a CSS variable cannot reach — SVG attributes and JS conditionals.
+// Never hardcode a hex below this block: change the palette here and everything,
+// including the background art, follows.
+//
+// The full token set is documented in `themes/synthwave-terminal.md`, which is what
+// future slides should be built from.
+const BG = design.palette.bg;
+const ACCENT = design.palette.accent;
 
-// Synthwave neon — magenta and cyan. Used ONLY in the background; never for text,
-// so the palette stays one accent (amber) as far as anything readable is concerned.
-const NEON_PINK = '#FF2DAA';
-const NEON_CYAN = '#00D9FF';
+const MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace';
+const BODY = '#C9D5E1'; // secondary body copy, table cells
+const MUTED = '#98A6BC'; // supporting copy, sub-headings
+const DIM = '#6E7C95'; // furniture only — footer, footnotes. Never load-bearing.
+const LINE = '#241C3C'; // hairlines, panel borders
+const PANEL = '#130E24'; // code/callout panel fill
+
+// Synthwave neon — background only, never text, so everything *readable* still
+// answers to exactly one accent. Kept as bare `r,g,b` triplets because the blooms
+// need them at several alphas; `NEON_*` are the solid forms for SVG strokes.
+const NEON_PINK_RGB = '255,45,170';
+const NEON_CYAN_RGB = '0,217,255';
+const NEON_VIOLET_RGB = '120,60,255';
+const NEON_SUNSET_RGB = '255,140,60'; // the horizon glow the accent is tuned against
+const NEON_PINK = `rgb(${NEON_PINK_RGB})`;
+const NEON_CYAN = `rgb(${NEON_CYAN_RGB})`;
+
+// Semantic colours that are not part of the theme: these mirror what the actual
+// tools emit, so they stay fixed even if the accent changes.
+const SEV_CRITICAL = '#FF6B6B';
+const CODE_TEXT = '#B9C6D4';
+const CODE_LITERAL = '#7EE787';
 
 /**
  * Starfield for the sky above the floor grid — 64 hand-placed points, so it renders
@@ -109,10 +135,10 @@ const STARS = [
 // keeps contrast intact on a washed-out projector.
 const TEXTURE = [
   ...STARS,
-  'radial-gradient(1250px 800px at 86% -8%, rgba(255,45,170,0.16), transparent 60%)',
-  'radial-gradient(1050px 720px at -4% 104%, rgba(0,217,255,0.13), transparent 60%)',
-  'radial-gradient(1500px 460px at 50% 112%, rgba(255,140,60,0.13), transparent 68%)',
-  'radial-gradient(900px 620px at 12% -10%, rgba(120,60,255,0.10), transparent 62%)',
+  `radial-gradient(1250px 800px at 86% -8%, rgba(${NEON_PINK_RGB},0.16), transparent 60%)`,
+  `radial-gradient(1050px 720px at -4% 104%, rgba(${NEON_CYAN_RGB},0.13), transparent 60%)`,
+  `radial-gradient(1500px 460px at 50% 112%, rgba(${NEON_SUNSET_RGB},0.13), transparent 68%)`,
+  `radial-gradient(900px 620px at 12% -10%, rgba(${NEON_VIOLET_RGB},0.10), transparent 62%)`,
   // CRT scanlines. 6px period, not 3-4px: a tighter pitch moirés against projector
   // pixels. Delete this one line if it shimmers on the venue hardware.
   'repeating-linear-gradient(to bottom, rgba(0,0,0,0.13) 0 1px, transparent 1px 6px)',
@@ -156,8 +182,8 @@ const Horizon = () => (
       {/* Front-edge shadow. The grid is densest exactly where the footer sits, so it
           sinks into darkness there — keeps the marker and page number readable. */}
       <linearGradient id="acr-floor" gradientUnits="userSpaceOnUse" x1="0" y1="950" x2="0" y2="1080">
-        <stop offset="0%" stopColor="#0A0716" stopOpacity="0" />
-        <stop offset="100%" stopColor="#0A0716" stopOpacity="0.92" />
+        <stop offset="0%" stopColor={BG} stopOpacity="0" />
+        <stop offset="100%" stopColor={BG} stopOpacity="0.92" />
       </linearGradient>
     </defs>
 
@@ -435,14 +461,14 @@ const ReviewBranch: Page = () => (
       <Panel width={1180}>
         <div>
           <span>🔴 </span>
-          <span style={{ color: '#FF6B6B', fontWeight: 700 }}>CRITICAL</span>
+          <span style={{ color: SEV_CRITICAL, fontWeight: 700 }}>CRITICAL</span>
           <span style={{ color: DIM }}>{'   '}</span>
           <span style={{ color: 'var(--osd-accent)' }}>src/testing/mocks/server.ts:14</span>
         </div>
         <div style={{ height: 14 }} />
-        <div style={{ color: '#B9C6D4' }}>
-          app.use(cors(&#123; origin: <span style={{ color: '#7EE787' }}>&apos;*&apos;</span>,
-          credentials: <span style={{ color: '#7EE787' }}>true</span> &#125;))
+        <div style={{ color: CODE_TEXT }}>
+          app.use(cors(&#123; origin: <span style={{ color: CODE_LITERAL }}>&apos;*&apos;</span>,
+          credentials: <span style={{ color: CODE_LITERAL }}>true</span> &#125;))
         </div>
         <div style={{ height: 14 }} />
         <div style={{ color: MUTED }}>Wildcard origin together with credentials — the</div>
@@ -562,7 +588,7 @@ const Stage = ({
       style={{
         fontFamily: MONO,
         fontSize: 26,
-        color: accent ? '#FFC24B' : DIM,
+        color: accent ? ACCENT : DIM,
         width: 48,
       }}
     >
@@ -572,7 +598,7 @@ const Stage = ({
       style={{
         fontSize: 34,
         lineHeight: 1.3,
-        color: accent ? '#FFC24B' : 'var(--osd-text)',
+        color: accent ? ACCENT : 'var(--osd-text)',
         fontWeight: accent ? 700 : 400,
       }}
     >
@@ -632,7 +658,7 @@ const TopicRow = ({
   >
     <span style={{ width: 54, color: 'var(--osd-accent)' }}>{handle}</span>
     <span style={{ width: 46 }}>{kind}</span>
-    <span style={{ flex: 1, color: '#C9D5E1' }}>{summary}</span>
+    <span style={{ flex: 1, color: BODY }}>{summary}</span>
     <span style={{ width: 300, color: stateColor, textAlign: 'right' }}>{state}</span>
   </div>
 );
@@ -663,9 +689,9 @@ const ReviewMrDays: Page = () => (
         <span style={{ flex: 1 }}>TOPIC</span>
         <span style={{ width: 300, textAlign: 'right' }}>STATE</span>
       </div>
-      <TopicRow handle="t1" kind="🔴" summary="CORS: wildcard origin + credentials" state="◐ needs-ack ✓" stateColor="#FFC24B" />
-      <TopicRow handle="t2" kind="🟡" summary="persistDb('comment') never awaited" state="◐ needs-ack" stateColor="#FFC24B" />
-      <TopicRow handle="t3" kind="🟠" summary="loadDb() returns null, callers spread it" state="◐ needs-ack" stateColor="#FFC24B" />
+      <TopicRow handle="t1" kind="🔴" summary="CORS: wildcard origin + credentials" state="◐ needs-ack ✓" stateColor={ACCENT} />
+      <TopicRow handle="t2" kind="🟡" summary="persistDb('comment') never awaited" state="◐ needs-ack" stateColor={ACCENT} />
+      <TopicRow handle="t3" kind="🟠" summary="loadDb() returns null, callers spread it" state="◐ needs-ack" stateColor={ACCENT} />
       <TopicRow handle="t4" kind="🔵" summary="mock DB path depends on cwd" state="○ open" stateColor={MUTED} />
       <TopicRow handle="t5" kind="💬" summary="a peer reviewer's thread" state="○ open" stateColor={MUTED} />
       <div style={{ fontFamily: MONO, fontSize: 25, color: DIM, marginTop: 16 }}>
@@ -738,7 +764,7 @@ const Principle = ({ label, children }: { label: string; children: ReactNode }) 
     >
       {label}
     </span>
-    <span style={{ fontSize: 34, lineHeight: 1.45, color: '#C9D5E1' }}>{children}</span>
+    <span style={{ fontSize: 34, lineHeight: 1.45, color: BODY }}>{children}</span>
   </div>
 );
 
@@ -850,8 +876,8 @@ const Wrap: Page = () => (
 
     <div style={{ marginTop: 38, fontSize: 30, lineHeight: 1.5, color: MUTED, maxWidth: 1520 }}>
       Honest caveat: this is a personal toolset, not a product. It wants{' '}
-      <code style={{ fontFamily: MONO, color: '#C9D5E1' }}>glab</code>, it wants macOS for the
-      clipboard bits, and it wants that <code style={{ fontFamily: MONO, color: '#C9D5E1' }}>Stop</code>{' '}
+      <code style={{ fontFamily: MONO, color: BODY }}>glab</code>, it wants macOS for the
+      clipboard bits, and it wants that <code style={{ fontFamily: MONO, color: BODY }}>Stop</code>{' '}
       hook before it behaves.
     </div>
   </Shell>
@@ -881,7 +907,8 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: 'Stop tabbing to the browser',
+  title: 'Agentic Code Reviews',
+  theme: 'synthwave-terminal',
   createdAt: '2026-08-05T15:19:53.556Z',
 };
 

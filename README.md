@@ -8,6 +8,13 @@ React component on a fixed 1920×1080 canvas.
 exist mainly to cover the ~4 minute stretch at the top while `/review-mr !1` runs
 unattended, plus a handful of beats later on.
 
+## Starting another deck?
+
+Build it from **`themes/synthwave-terminal.md`** — the palette, type scale, layout metrics and
+paste-ready `Shell` / `Footer` / `Kicker` / `SkillH` components live there, with the reasoning
+for each. `/create-slide` will offer it as a picker option, and the dev UI's **Themes** panel
+previews it live from `themes/synthwave-terminal.demo.tsx`.
+
 ## Present it
 
 ```bash
@@ -85,7 +92,7 @@ Everything is one file: `slides/mr-review-with-agent-skills/index.tsx`. `npm run
 | Want to change | Where |
 | --- | --- |
 | Title, the `/review-mr - /rework-mr` eyebrow, the name / event / date line | `Title`. It is intentionally bare — three elements and no footer. |
-| Colours, fonts, hero size | the `design` const at the top; or live-tweak via the **Design** button in the dev UI and hit Save |
+| Colours, fonts, hero size | the `design` const at the top; or live-tweak via the **Design** button in the dev UI and hit Save. Everything else reads from it — `BG` / `ACCENT` re-export it for SVG and JS, so there are no stray hexes to chase. Mirror any change into `themes/synthwave-terminal.md`. |
 | Anything on one page | find its component — `grep -n ": Page = " slides/*/index.tsx` |
 | Page order, or cut a page | the `export default [...]` array at the bottom. Page numbers and `NN / 10` update themselves via `useSlidePageNumber()` — nothing to renumber. **Keep `notes` in the same order.** |
 | Give the title page a footer after all | pass a `marker` to its `<Shell>`; omitting `marker` is what suppresses the footer |
@@ -114,4 +121,6 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 | `previews/` | rendered PNG of all 10 pages, so you can judge it without building |
 | [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
 | [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + timing, phone-readable |
+| `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build future slides from this.** |
+| `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
 | `.agents/`, `.claude/` | open-slide's own authoring skills, shipped by the framework |
