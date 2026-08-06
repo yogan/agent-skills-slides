@@ -176,19 +176,20 @@ const Panel = ({ children, width }: { children: ReactNode; width?: number }) => 
 const Title: Page = () => (
   <Shell>
     {/* Own eyebrow style rather than <Kicker>: that one is tracked-out uppercase,
-        which reads badly on lowercase command names. */}
+        which reads badly on lowercase command names. Colour split matches <SkillH>
+        on every other page — accent slash, plain text for the command name. */}
     <div
       style={{
         fontFamily: MONO,
         fontSize: 36,
         lineHeight: 1.2,
-        color: 'var(--osd-accent)',
+        color: 'var(--osd-text)',
         letterSpacing: '0.02em',
       }}
     >
-      /review-mr
+      <span style={{ color: 'var(--osd-accent)' }}>/</span>review-mr
       <span style={{ color: DIM, margin: '0 18px' }}>·</span>
-      /rework-mr
+      <span style={{ color: 'var(--osd-accent)' }}>/</span>rework-mr
     </div>
     <h1
       style={{
@@ -202,12 +203,17 @@ const Title: Page = () => (
     >
       Agentic Code Reviews
     </h1>
-    <div style={{ marginTop: 56, fontFamily: MONO, fontSize: 30, color: MUTED }}>
-      Frank Blendinger
-      <span style={{ color: DIM, margin: '0 22px' }}>·</span>
-      Open Source Contributors @ ZAM
-      <span style={{ color: DIM, margin: '0 22px' }}>·</span>
-      2026-08-06
+    <div style={{ marginTop: 56, fontFamily: MONO, fontSize: 30, color: MUTED, lineHeight: 1.5 }}>
+      <div>
+        Frank Blendinger
+        <span style={{ color: DIM, margin: '0 22px' }}>·</span>
+        @yogan
+      </div>
+      <div>
+        Open Source Contributors @ ZAM
+        <span style={{ color: DIM, margin: '0 22px' }}>·</span>
+        2026-08-06
+      </div>
     </div>
   </Shell>
 );
