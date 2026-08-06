@@ -65,7 +65,8 @@ const Footer = ({ marker }: { marker: string }) => {
 // the pages carry deliberately little text, and top-alignment left 200–350px of
 // dead space below the sparser ones. The footer stays absolutely positioned, so
 // the slide furniture does not move even though the content block does.
-const Shell = ({ marker, children }: { marker: string; children: ReactNode }) => (
+// `marker` omitted → no footer at all (the title page carries no furniture).
+const Shell = ({ marker, children }: { marker?: string; children: ReactNode }) => (
   <div
     style={{
       width: '100%',
@@ -83,7 +84,7 @@ const Shell = ({ marker, children }: { marker: string; children: ReactNode }) =>
     }}
   >
     {children}
-    <Footer marker={marker} />
+    {marker ? <Footer marker={marker} /> : null}
   </div>
 );
 
@@ -171,9 +172,22 @@ const Panel = ({ children, width }: { children: ReactNode; width?: number }) => 
 
 // ── 01 · Title ───────────────────────────────────────────────────────────────
 
+// Deliberately bare: eyebrow, title, byline. No footer, no page number, nothing else.
 const Title: Page = () => (
-  <Shell marker="agent-skills">
-    <Kicker>CLAUDE CODE SKILLS · 90 % LIVE DEMO</Kicker>
+  <Shell>
+    {/* Own eyebrow style rather than <Kicker>: that one is tracked-out uppercase,
+        which reads badly on lowercase command names. */}
+    <div
+      style={{
+        fontFamily: MONO,
+        fontSize: 36,
+        lineHeight: 1.2,
+        color: 'var(--osd-accent)',
+        letterSpacing: '0.02em',
+      }}
+    >
+      /review-mr - /rework-mr
+    </div>
     <h1
       style={{
         fontFamily: 'var(--osd-font-display)',
@@ -181,241 +195,22 @@ const Title: Page = () => (
         fontWeight: 850,
         lineHeight: 1.02,
         letterSpacing: '-0.035em',
-        margin: '40px 0 0',
+        margin: '44px 0 0',
       }}
     >
-      Stop tabbing to
-      <br />
-      the <span style={{ color: 'var(--osd-accent)' }}>browser</span>.
+      Agentic Code Reviews
     </h1>
-    <p style={{ fontSize: 40, lineHeight: 1.4, color: MUTED, margin: '40px 0 0', maxWidth: 1400 }}>
-      Reviewing merge requests — and answering the review — from the terminal you were
-      already in.
-    </p>
-    <div style={{ marginTop: 64, display: 'flex', alignItems: 'center', gap: 28 }}>
-      <Panel>
-        <span style={{ color: DIM }}>$ </span>
-        <span style={{ color: 'var(--osd-accent)' }}>/review-mr</span> !1
-        <span
-          style={{
-            display: 'inline-block',
-            width: 14,
-            height: 28,
-            background: 'var(--osd-text)',
-            marginLeft: 12,
-            verticalAlign: '-4px',
-          }}
-        />
-      </Panel>
-      <span style={{ fontFamily: MONO, fontSize: 24, color: DIM }}>
-        ← already running, since before I said hello
-      </span>
-    </div>
-    <div style={{ marginTop: 32, fontFamily: MONO, fontSize: 26, color: MUTED }}>
+    <div style={{ marginTop: 56, fontFamily: MONO, fontSize: 30, color: MUTED }}>
       Frank Blendinger
-      <span style={{ color: LINE, margin: '0 18px' }}>│</span>
-      <span style={{ color: DIM }}>⟨event · date — edit me⟩</span>
+      <span style={{ color: DIM, margin: '0 22px' }}>/</span>
+      Open Source Contributors @ ZAM
+      <span style={{ color: DIM, margin: '0 22px' }}>/</span>
+      2026-08-06
     </div>
   </Shell>
 );
 
-// ── 02 · The pain ────────────────────────────────────────────────────────────
-
-const Pain: Page = () => (
-  <Shell marker="the pain">
-    <H>The review is fine. The shuttling isn&rsquo;t.</H>
-
-    <div style={{ marginTop: 44, borderLeft: `5px solid var(--osd-accent)`, paddingLeft: 44 }}>
-      <p style={{ fontSize: 44, lineHeight: 1.45, margin: 0, fontStyle: 'italic' }}>
-        &ldquo;I do both things with the support of an agent anyway, and wanted to reduce the
-        context switching and the copy/pasting from terminal to browser.&rdquo;
-      </p>
-      <div style={{ fontFamily: MONO, fontSize: 24, color: MUTED, marginTop: 20 }}>
-        — me, explaining why this exists
-      </div>
-    </div>
-
-    <div style={{ marginTop: 52 }}>
-      <div
-        style={{
-          fontFamily: MONO,
-          fontSize: 24,
-          color: MUTED,
-          letterSpacing: '0.14em',
-          marginBottom: 4,
-        }}
-      >
-        TERMINAL
-      </div>
-      <svg width={1520} height={168} viewBox="0 0 1520 168" role="img" aria-label="A trace zigzagging between a terminal rail and a browser rail, again and again">
-        <line x1="0" y1="16" x2="1520" y2="16" stroke={LINE} strokeWidth="2" />
-        <line x1="0" y1="152" x2="1520" y2="152" stroke={LINE} strokeWidth="2" />
-        <polyline
-          points="40,16 220,152 400,16 580,152 760,16 940,152 1120,16 1300,152 1420,16"
-          fill="none"
-          stroke="#FFC24B"
-          strokeWidth="4"
-          strokeLinejoin="round"
-        />
-        <circle cx="40" cy="16" r="9" fill="#FFC24B" />
-        <circle cx="400" cy="16" r="9" fill="#FFC24B" />
-        <circle cx="760" cy="16" r="9" fill="#FFC24B" />
-        <circle cx="1120" cy="16" r="9" fill="#FFC24B" />
-        <circle cx="1420" cy="16" r="9" fill="#FFC24B" />
-        <circle cx="220" cy="152" r="9" fill="#FFC24B" />
-        <circle cx="580" cy="152" r="9" fill="#FFC24B" />
-        <circle cx="940" cy="152" r="9" fill="#FFC24B" />
-        <circle cx="1300" cy="152" r="9" fill="#FFC24B" />
-      </svg>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          fontFamily: MONO,
-          fontSize: 24,
-          letterSpacing: '0.14em',
-          marginTop: 4,
-        }}
-      >
-        <span style={{ color: MUTED }}>BROWSER</span>
-        <span style={{ color: DIM, letterSpacing: 'normal' }}>
-          … and again on Thursday. And the week after.
-        </span>
-      </div>
-    </div>
-  </Shell>
-);
-
-// ── 03 · The shape of the solution ───────────────────────────────────────────
-
-const FlowRow = ({
-  from,
-  verb,
-  to,
-  accent = false,
-}: {
-  from: string;
-  verb: string;
-  to: string;
-  accent?: boolean;
-}) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-    <div
-      style={{
-        width: 470,
-        height: 84,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: `2px solid ${accent ? '#FFC24B' : LINE}`,
-        borderRadius: 'var(--osd-radius)',
-        background: accent ? 'rgba(255,194,75,0.10)' : PANEL,
-        fontFamily: MONO,
-        fontSize: 30,
-        color: accent ? '#FFC24B' : 'var(--osd-text)',
-        boxSizing: 'border-box',
-      }}
-    >
-      {from}
-    </div>
-    <div
-      style={{
-        width: 340,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 6,
-      }}
-    >
-      <span
-        style={{
-          fontFamily: MONO,
-          fontSize: 26,
-          color: accent ? '#FFC24B' : MUTED,
-          letterSpacing: '0.1em',
-        }}
-      >
-        {verb}
-      </span>
-      <svg width={280} height={16} viewBox="0 0 280 16" aria-hidden="true">
-        <line
-          x1="0"
-          y1="8"
-          x2="262"
-          y2="8"
-          stroke={accent ? '#FFC24B' : '#3A4756'}
-          strokeWidth="3"
-        />
-        <polygon points="262,1 280,8 262,15" fill={accent ? '#FFC24B' : '#3A4756'} />
-      </svg>
-    </div>
-    <div
-      style={{
-        width: 470,
-        height: 84,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: `2px solid ${accent ? '#FFC24B' : LINE}`,
-        borderRadius: 'var(--osd-radius)',
-        background: accent ? 'rgba(255,194,75,0.10)' : PANEL,
-        fontFamily: MONO,
-        fontSize: 30,
-        color: accent ? '#FFC24B' : 'var(--osd-text)',
-        boxSizing: 'border-box',
-      }}
-    >
-      {to}
-    </div>
-  </div>
-);
-
-const Shape: Page = () => (
-  <Shell marker="the shape">
-    <H>The agent reads and drafts. You post.</H>
-    <p style={{ fontSize: 32, lineHeight: 1.4, color: MUTED, margin: '20px 0 0' }}>
-      One write in the whole loop, and it is yours.
-    </p>
-
-    <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 26 }}>
-      <FlowRow from="GitLab" verb="reads" to="the agent" />
-      <FlowRow from="the agent" verb="drafts" to="you" />
-      <FlowRow from="you" verb="post it" to="GitLab" accent />
-    </div>
-
-    <div style={{ marginTop: 46, display: 'flex', gap: 28 }}>
-      <div
-        style={{
-          flex: 1,
-          border: `1px solid ${LINE}`,
-          borderRadius: 'var(--osd-radius)',
-          padding: '22px 30px',
-          fontSize: 30,
-          lineHeight: 1.35,
-        }}
-      >
-        <span style={{ fontFamily: MONO, color: 'var(--osd-accent)' }}>/review-mr</span>
-        <span style={{ color: MUTED }}> — someone else&rsquo;s MR</span>
-      </div>
-      <div
-        style={{
-          flex: 1,
-          border: `1px solid ${LINE}`,
-          borderRadius: 'var(--osd-radius)',
-          padding: '22px 30px',
-          fontSize: 30,
-          lineHeight: 1.35,
-        }}
-      >
-        <span style={{ fontFamily: MONO, color: 'var(--osd-accent)' }}>/rework-mr</span>
-        <span style={{ color: MUTED }}> — your own MR</span>
-      </div>
-    </div>
-  </Shell>
-);
-
-// ── 04 · review-branch ───────────────────────────────────────────────────────
+// ── 02 · review-branch ───────────────────────────────────────────────────────
 
 const ReviewBranch: Page = () => (
   <Shell marker="review-branch">
@@ -452,7 +247,7 @@ const ReviewBranch: Page = () => (
   </Shell>
 );
 
-// ── 05 · explain-diff ────────────────────────────────────────────────────────
+// ── 03 · explain-diff ────────────────────────────────────────────────────────
 
 const RailRow = ({ label, note }: { label: string; note: string }) => (
   <div
@@ -506,7 +301,7 @@ const ExplainDiff: Page = () => (
   </Shell>
 );
 
-// ── 06 · explain-branch ──────────────────────────────────────────────────────
+// ── 04 · explain-branch ──────────────────────────────────────────────────────
 
 const ExplainBranch: Page = () => (
   <Shell marker="explain-branch">
@@ -546,7 +341,7 @@ const ExplainBranch: Page = () => (
   </Shell>
 );
 
-// ── 07 · review-mr, the loop ─────────────────────────────────────────────────
+// ── 05 · review-mr, the loop ─────────────────────────────────────────────────
 
 const Stage = ({
   n,
@@ -604,7 +399,7 @@ const ReviewMrLoop: Page = () => (
   </Shell>
 );
 
-// ── 08 · review-mr, the multi-day part ───────────────────────────────────────
+// ── 06 · review-mr, the multi-day part ───────────────────────────────────────
 
 const TopicRow = ({
   handle,
@@ -692,7 +487,7 @@ const ReviewMrDays: Page = () => (
   </Shell>
 );
 
-// ── 09 · rework-mr ───────────────────────────────────────────────────────────
+// ── 07 · rework-mr ───────────────────────────────────────────────────────────
 
 const ReworkMr: Page = () => (
   <Shell marker="rework-mr">
@@ -722,7 +517,7 @@ const ReworkMr: Page = () => (
   </Shell>
 );
 
-// ── 10 · Design principles ───────────────────────────────────────────────────
+// ── 08 · Design principles ───────────────────────────────────────────────────
 
 const Principle = ({ label, children }: { label: string; children: ReactNode }) => (
   <div style={{ display: 'flex', gap: 40, alignItems: 'baseline' }}>
@@ -780,7 +575,7 @@ const Principles: Page = () => (
   </Shell>
 );
 
-// ── 11 · The rig ─────────────────────────────────────────────────────────────
+// ── 09 · The rig ─────────────────────────────────────────────────────────────
 
 const Rig: Page = () => (
   <Shell marker="the rig">
@@ -814,7 +609,7 @@ const Rig: Page = () => (
   </Shell>
 );
 
-// ── 12 · Wrap ────────────────────────────────────────────────────────────────
+// ── 10 · Wrap ────────────────────────────────────────────────────────────────
 
 const SkillLine = ({ name, note }: { name: string; note: string }) => (
   <div style={{ display: 'flex', alignItems: 'baseline', gap: 32, height: 52 }}>
@@ -859,28 +654,24 @@ const Wrap: Page = () => (
 
 export const notes: (string | undefined)[] = [
   // 01 Title
-  'The command is already running behind this slide — say that out loud, it buys you the next four minutes and sets up the whole talk. Introduce yourself fast. Do not explain the skills yet.',
-  // 02 The pain
-  'Read the quote as your own words, because they are. The point is not that reviewing code is hard — it is the shuttling: terminal, browser, clipboard, terminal. Trace the zigzag with a finger and land on "and again on Thursday".',
-  // 03 The shape
-  'Three rows, one idea: the agent reads GitLab and drafts for me, and the only write in the whole loop is mine. Then flag the two hats — reviewing someone else, and answering a review of my own. The rest of the talk is those two, in that order.',
-  // 04 review-branch
+  'The command is already running behind this slide — say that out loud, it buys you the next four minutes and sets up the whole talk. Introduce yourself fast, then frame the pain in your own words: not that reviewing code is hard, but the shuttling between terminal and browser, over and over, for days. Two hats: reviewing someone else, and answering a review of your own. Do not explain the skills yet.',
+  // 02 review-branch
   'This is the boring one and the foundation. Purely local, no GitLab, no network. It reads every commit since the branch left main and returns a flat severity-tagged list. That CORS finding is real output from a rehearsal — and it is one of the two flaws I planted.',
-  // 05 explain-diff
+  // 03 explain-diff
   'Different intent from review: no findings at all, just teaching. It writes one self-contained HTML file and opens it. Mention the quiz — people either love it or find it deeply strange, both are fine reactions.',
-  // 06 explain-branch
+  // 04 explain-branch
   'This is the one running right now, so keep it short — the audience will see the real output in a minute. The interesting judgement is which commits get a chapter: renames and reformats get a sentence folded into a neighbour.',
-  // 07 review-mr, the loop
+  // 05 review-mr, the loop
   'The centrepiece. Walk the five stages and stress stage five: it drafts, I post. Then the worktree detail, which developers always ask about — my checkout never moves. If a comment I typed in the browser myself shows up, sync adopts it as a tracked topic.',
-  // 08 review-mr, the multi-day part
+  // 06 review-mr, the multi-day part
   'The table is the money shot — this is close to what you are about to see live. Point at t1 through t5, then the two pushes line. The line that matters is the last one: the author resolving a thread is not a close. Only my ack is.',
-  // 09 rework-mr
+  // 07 rework-mr
   'Hat switch: now the review comments are pointed at me. The discipline is that nothing gets coded until every thread has an agreed plan — otherwise you fix the easy three and lose the argument on the hard one. Fixup, not a new commit, so the branch stays reviewable.',
-  // 10 Principles
+  // 08 Principles
   'Three reveals, so pace yourself. Read-only and state-in-files are quick. Spend your time on the third: instructions an agent has to remember across many turns get dropped, but output it printed does not. That is why so much of this is rendered blocks — and why one rule is enforced by a Stop hook, after documenting it failed three times.',
-  // 11 The rig
+  // 09 The rig
   'Credibility beat. Everything you just saw runs against a GitLab in Docker on this laptop, reset in twenty seconds. The MR is a real upstream PR replayed commit for commit — two flaws are genuinely upstream’s, which is the more interesting half.',
-  // 12 Wrap
+  // 10 Wrap
   'One line per skill, then the repo. Do not oversell: it is a personal toolset, glab-only, macOS-flavoured, and it needs the Stop hook. Then open the floor — the rig and the Stop hook are what people ask about.',
 ];
 
@@ -891,8 +682,6 @@ export const meta: SlideMeta = {
 
 export default [
   Title,
-  Pain,
-  Shape,
   ReviewBranch,
   ExplainDiff,
   ExplainBranch,

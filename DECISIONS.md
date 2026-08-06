@@ -1,7 +1,28 @@
 # Decisions
 
-Every judgement call the handoff left open, and the two places I deviated from it. Ordered
-roughly by how likely you are to disagree.
+Every judgement call the handoff left open, the changes made after the first review, and the
+two places I deviated from the handoff. Ordered roughly by how likely you are to disagree.
+
+## Changes made after the first review
+
+**The pain page and the shape-of-the-solution page were cut**, on request — the deck went
+from 12 pages to 10. Both were pre-demo framing (the terminal↔browser zigzag, and the
+GitLab → agent → you flow diagram). What they carried is now spoken rather than shown: the
+title page is bare and the speaker frames the pain over it, and page 08 still makes the
+read-only point. The notes for page 01 carry the framing beats so nothing is lost silently.
+
+The `FlowRow` component that only the shape page used was removed with it.
+
+**The title page was rewritten to spec** and is deliberately the odd one out:
+
+- eyebrow `/review-mr - /rework-mr`, then **Agentic Code Reviews**, then
+  `Frank Blendinger / Open Source Contributors @ ZAM / 2026-08-06`
+- **nothing else — no subtitle, no footer, no page number.** `Shell`'s `marker` prop is now
+  optional, and omitting it suppresses the footer entirely. That is the only page without
+  furniture; numbering on the rest is unaffected because `useSlidePageNumber()` counts pages,
+  so page 02 reads `02 / 10`.
+- the eyebrow does *not* use the shared `<Kicker>`: that style is tracked-out uppercase, which
+  looks wrong on lowercase command names. It gets its own tighter, larger mono style.
 
 ## Deviations from the handoff
 
@@ -9,36 +30,35 @@ roughly by how likely you are to disagree.
 
 The handoff asked for consistent slide furniture. I first built every page top-aligned at
 120px, which gave a genuinely consistent heading anchor — and 200–350px of dead space under
-the sparser pages (the shape diagram, the principles). It read as unfinished rather than
-airy.
+the sparser pages. It read as unfinished rather than airy.
 
 So the content block is now vertically centred in the band above the footer. The **furniture**
-is still fixed: the footer marker and `NN / 12` sit at an identical absolute position on all
-12 pages, which is the part the eye actually tracks between slides. Easy to revert — one
+is still fixed: the footer marker and `NN / 10` sit at an identical absolute position on all
+nine pages that have one, which is the part the eye actually tracks between slides. Easy to revert — one
 `justifyContent` in `Shell`.
 
-### 2. Page 10 is the only page with a stepped reveal
+### 2. Page 8 is the only page with a stepped reveal
 
 `<Steps>` is available and the handoff didn't ask for it. I used it on exactly one page — the
 design principles — because the third principle (printed > remembered) is the payoff and
 showing all three at once lets the room read ahead to it.
 
-The cost is real and you should know about it: **`→` on page 10 advances the reveal, not the
+The cost is real and you should know about it: **`→` on page 8 advances the reveal, not the
 page.** Three extra presses. It is documented in the README and flagged in the notes. Every
 other page is shown whole, which is the right default for a deck you talk over.
 
 ## Deck structure
 
-**12 pages, matching the suggested outline 1:1**, including `review-mr` as two pages. I did
-not add a separate quote slide — the speaker's own words became the pull quote *on* the pain
-page, which keeps that page to one idea and one visual instead of spending a whole page on
-each.
+**10 pages.** The original build followed the handoff outline 1:1 at 12 pages; the two
+framing pages were then cut (above), leaving a title, one page per skill with `review-mr`
+split in two, principles, the rig and a wrap.
 
-The 4-minute opening window is carried by pages 1–6. That is roughly 40 seconds a page, which
-is comfortable talking pace over slides this sparse.
+The 4-minute opening window is now carried by pages 1–4, which is closer to a minute a page.
+That is fine for pages this sparse — the speaker is narrating, not reading — but it does put
+more weight on the title page, which is why its notes are the longest in the deck.
 
-**Pages 5, 6 and 11 are the designated cuts** if the talk runs late, and the notes say so. I
-flagged 11 (the rig) as the one to protect, following the runbook's own instinct that this
+**Pages 3, 4 and 9 are the designated cuts** if the talk runs late, and the notes say so. I
+flagged 9 (the rig) as the one to protect, following the runbook's own instinct that this
 crowd will want it.
 
 ## Look and feel
@@ -51,7 +71,7 @@ crowd will want it.
 | Muted | `#8695A6` (6.3:1), dim `#5C6B7C` (3.6:1) | Secondary text only. **Nothing load-bearing is in dim** — it carries page numbers, the marker and footnotes. Dim is the one value below 4.5:1, which is why nothing you need to read sits in it. |
 | Display / body | system sans (SF Pro on the speaker's Mac) | Heavy weights (800–850) for headings. |
 | Monospace | SF Mono / Menlo stack | Used for **anything you could actually type** — skill names, file paths, commands, the topic table. That is the whole "nerdy" budget. |
-| Hero | 132px | Fits "Stop tabbing to / the browser." on two lines within the 1680px content width. |
+| Hero | 132px | Fits "Agentic Code Reviews" on one line within the 1680px content width. |
 | Body | 32–40px | Well above the 28px projector floor. |
 
 **Why amber and not the obvious terminal green:** the deck reproduces the skills' own severity
@@ -76,12 +96,12 @@ The handoff allowed Unsplash/Pexels/undraw and also said a text or code slide be
 dubious photo. I went further and used **no photos at all** — not because I couldn't find
 free ones, but because every slide that might have wanted one had a better answer:
 
-- **The pain** → an SVG trace zigzagging between a TERMINAL rail and a BROWSER rail. It *is*
-  the metaphor, drawn from the content, rather than a stock photo of a tired developer.
-- **The shape** → a three-row CSS flow diagram, with the one row that is a write picked out in
-  accent. A photo cannot make that point.
 - **review-branch / review-mr** → real tool output. This audience prefers artefacts to
   imagery, and the handoff said so.
+- **The rig** → three brand marks and four facts. A photo of a laptop adds nothing.
+
+(The two cut pages were the other two: a hand-drawn SVG zigzag and a CSS flow diagram, both
+built rather than sourced. They went for editorial reasons, not licensing ones.)
 
 A stock photo would have been decoration competing with the type. Nothing was licensed that
 did not earn its place.
@@ -106,7 +126,7 @@ asked for fonts to be vendored *if* needed — the cheaper answer was not to nee
 speaker's macOS machine this is SF Pro + SF Mono, which is exactly the intended look.
 
 **Glyphs verified rendering** in a real headless-Chrome capture, not assumed: `✎ ○ ◐ ● ⊘ ✓`
-and `🔴 🟠 🟡 🔵 💬`. The status legend on page 8 exists partly so the audience can decode the
+and `🔴 🟠 🟡 🔵 💬`. The status legend on page 6 exists partly so the audience can decode the
 live demo, and partly as a standing check that these still render.
 
 ## Content accuracy
@@ -130,12 +150,12 @@ titles, so I did not invent plausible-looking ones for a slide that claims to sh
 output.
 
 **Language: English throughout**, per the handoff. Note the deck says `drafts in en`, while
-`review-mr` defaults to German per repo — that marker is correct *for this demo*, and page 7
+`review-mr` defaults to German per repo — that marker is correct *for this demo*, and page 5
 says "in the repo's language" rather than naming one.
 
 ## Things I chose not to do
 
-- **A glyph-legend slide of its own.** Folded into page 8, under the table, where it is
+- **A glyph-legend slide of its own.** Folded into page 6, under the table, where it is
   useful in context rather than as a page of notation.
 - **A chart.** Nothing in the talk is quantitative. The `dataviz` skill's palette rules would
   have been solving a problem the deck doesn't have.
@@ -147,9 +167,13 @@ says "in the repo's language" rather than naming one.
 
 ## Verification
 
-`npm run build` is clean. All 12 pages were rendered in headless Chrome at exactly 1920×1080
+`npm run build` is clean. All 10 pages were rendered in headless Chrome at exactly 1920×1080
 in play mode and inspected — that is what `previews/` contains, and it is how the overflow and
 glyph checks were done rather than by trusting arithmetic. No page overflows the canvas.
+
+The stepped page is captured **fully revealed**: entered forward it starts empty, so a naive
+walk screenshots a blank slide and silently mis-indexes every page after it. Worth knowing if
+you regenerate the previews.
 
 There is **no typecheck in CI or in the project** — TypeScript is not a dependency and the
 build uses esbuild, which strips types without checking them. Types here are authoring
