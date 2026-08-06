@@ -6,7 +6,7 @@ React component on a fixed 1920×1080 canvas.
 
 **The deck is support, not the act.** The talk is ~90 % live terminal demo.
 
-> ### State: building up — 3 slides
+> ### State: building up — 4 slides
 >
 > The deck was pruned back to a title and one `/review-mr` slide, and content is being built up
 > again from there. What is here is finished; it is just not finished *talk*.
@@ -67,6 +67,7 @@ the deck and use the **Export** menu in the slide toolbar:
 | 01 | Title | — |
 | 02 | `/review-mr` — reviewing someone else's MR | 5 |
 | 03 | `/rework-mr` — answering the review of your own | 5 |
+| 04 | Outro — repo, contact, caveat | — |
 
 There is **no slide furniture at all** — no footer, no page numbers, no running topic marker.
 
@@ -74,7 +75,7 @@ There is **no slide furniture at all** — no footer, no page numbers, no runnin
 
 Each skill page arrives showing its heading and a one-line description of the skill. The
 description **fades out as the first row arrives**, and every `→` brings in the next row — so a
-stepped page costs **6** presses, not 1. That is 13 from the title to the end of the deck.
+stepped page costs **6** presses, not 1. That is 14 from the title to the end of the deck.
 Worth one dry run before you present.
 
 Two consequences of how open-slide implements this:
@@ -125,10 +126,10 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 
 | Path | What |
 | --- | --- |
-| `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 3 pages, `notes`, `design`, and the background art |
+| `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 4 pages, `notes`, `design`, and the background art |
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
-| `assets/` | brand icons (currently unused — see [`CREDITS.md`](assets/CREDITS.md)) |
+| `assets/` | the avatar, plus three unused brand icons — see [`CREDITS.md`](assets/CREDITS.md) |
 | `previews/` | rendered PNG of every page — plus `*-intro.png` for the skill pages as they first appear, before any row reveals |
 | [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
 | [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + the show-of-hands script, phone-readable |

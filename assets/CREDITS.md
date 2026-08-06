@@ -3,6 +3,18 @@
 Every asset in the deck is committed to this repo. Nothing is hotlinked, so the deck
 renders with the venue wifi unplugged.
 
+## Avatar — in use
+
+`goomba.png` — the speaker's own Mastodon avatar, fetched once from
+[chaos.social/@yogan](https://chaos.social/@yogan) so nothing is hotlinked. 400 × 400 PNG,
+293 KB, which is over Vite's 4 KB inline threshold, so it is emitted as a separate file in
+`dist/` rather than inlined — still local, still offline-safe.
+
+It is the speaker's own profile image, on the speaker's own closing slide. Worth noting only
+that the character is Nintendo's; this is a personal avatar in a conference talk, not a
+commercial use, and it is the speaker's call rather than a licence question this repo can
+settle.
+
 ## Icons — currently unused
 
 > These were the rig slide's; that page was pruned when the deck was reset to a clean base.

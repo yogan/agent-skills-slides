@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 import { Step, Steps } from '@open-slide/core';
+import goomba from '@assets/goomba.png';
 
 export const design: DesignSystem = {
   // accent = "sunset gold". Warmer than the amber this deck started with (hue 40° → 35°),
@@ -567,6 +568,43 @@ const ReworkMr: Page = () => (
   </Shell>
 );
 
+// ── 04 · Outro ───────────────────────────────────────────────────────────────
+
+const Contact = ({ children }: { children: ReactNode }) => (
+  <div style={{ fontFamily: MONO, fontSize: 42, lineHeight: 1.3, color: 'var(--osd-text)' }}>
+    {children}
+  </div>
+);
+
+const Outro: Page = () => (
+  <Shell>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 72 }}>
+      {/* Rounded square rather than a circle: it is pixel art, and a circular crop
+          fights the grid the artwork is drawn on. */}
+      <img
+        src={goomba}
+        alt=""
+        style={{ width: 240, height: 240, borderRadius: 20, flexShrink: 0 }}
+      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
+        <Contact>
+          github.com/yogan/<Hat>agent-skills</Hat>
+        </Contact>
+        <Contact>
+          chaos.social/<Hat>@</Hat>yogan
+        </Contact>
+        <Contact>
+          fb<Hat>@</Hat>zogan.de
+        </Contact>
+      </div>
+    </div>
+
+    <div style={{ marginTop: 84, fontSize: 34, lineHeight: 1.4, color: MUTED }}>
+      Work in progress · highly personalised · <code style={{ fontFamily: MONO }}>glab</code>-only
+    </div>
+  </Shell>
+);
+
 export const notes: (string | undefined)[] = [
   // 01 Title
   [
@@ -586,6 +624,8 @@ export const notes: (string | undefined)[] = [
     '• Hat switch — /rework-mr !3',
     '• t1 trivial, t2 the real cache bug (keep the grilling short)',
   ].join('\n'),
+  // 04 outro
+  ['• Do not oversell it', '• Questions'].join('\n'),
 ];
 
 export const meta: SlideMeta = {
@@ -594,4 +634,4 @@ export const meta: SlideMeta = {
   createdAt: '2026-08-05T15:19:53.556Z',
 };
 
-export default [Title, ReviewMr, ReworkMr] satisfies Page[];
+export default [Title, ReviewMr, ReworkMr, Outro] satisfies Page[];

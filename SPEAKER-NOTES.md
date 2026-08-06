@@ -3,7 +3,7 @@
 Cues only. Same text as the `notes` export in the deck, which is what the presenter window
 shows on `P`. **Edit both if you edit one.**
 
-> **State: building up.** Three slides — see [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
+> **State: building up.** Four slides — see [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
 
 ## 01 · Title
 
@@ -35,6 +35,13 @@ then show me the overview and stop. Don't ask me anything before the overview.
 ```
 • Hat switch — /rework-mr !3
 • t1 trivial, t2 the real cache bug (keep the grilling short)
+```
+
+## 04 · Outro
+
+```
+• Do not oversell it
+• Questions
 ```
 
 ## Formatting notes in the presenter pane
