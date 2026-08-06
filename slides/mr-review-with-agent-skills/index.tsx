@@ -404,9 +404,9 @@ const Intro = ({ children }: { children: ReactNode }) => (
       position: 'absolute',
       top: '50%',
       left: 0,
-      maxWidth: 1500,
-      fontSize: 36,
-      lineHeight: 1.45,
+      maxWidth: 1680,
+      fontSize: 44,
+      lineHeight: 1.75,
       color: MUTED,
       margin: 0,
     }}
