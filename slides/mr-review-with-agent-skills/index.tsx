@@ -293,6 +293,7 @@ const SkillH = ({ name }: { name: string }) => (
   >
     <span style={{ color: 'var(--osd-accent)' }}>/</span>
     {name}
+    <span style={{ color: MUTED }}> Skill</span>
   </h2>
 );
 
@@ -301,7 +302,6 @@ const SkillH = ({ name }: { name: string }) => (
 // Deliberately bare: eyebrow, title, byline. No footer, no page number, nothing else.
 const Title: Page = () => (
   <Shell>
-    <CommandPair sep="·" />
     <h1
       style={{
         fontFamily: 'var(--osd-font-display)',
@@ -309,27 +309,30 @@ const Title: Page = () => (
         fontWeight: 850,
         lineHeight: 1.02,
         letterSpacing: '-0.035em',
-        margin: '44px 0 0',
+        margin: 0,
       }}
     >
       Agentic Code Reviews
     </h1>
-    {/* Both byline rows lead with a mark in a fixed-width slot, so the text still starts on
-        one axis even though the two marks are different shapes. */}
+    {/* Both byline rows lead with a mark in a fixed-width slot, right-aligned: the marks are
+        different shapes, so sharing a right edge is what makes the text start on one axis
+        and keeps the pair from looking ragged. */}
     <div
       style={{
-        marginTop: 56,
+        marginTop: 84,
         fontFamily: MONO,
         fontSize: 30,
         color: MUTED,
         lineHeight: 1.4,
         display: 'flex',
         flexDirection: 'column',
-        gap: 26,
+        gap: 40,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-        <span style={{ width: MARK_SLOT, display: 'flex', flexShrink: 0 }}>
+        <span
+          style={{ width: MARK_SLOT, display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}
+        >
           <img src={goomba} alt="" style={{ width: 44, height: 44, borderRadius: 8 }} />
         </span>
         <span>
@@ -339,7 +342,15 @@ const Title: Page = () => (
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-        <span style={{ width: MARK_SLOT, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+        <span
+          style={{
+            width: MARK_SLOT,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            flexShrink: 0,
+          }}
+        >
           {/* The official ZAM mark ships as black-on-white JPEG — no alpha to mask, and
               blend modes cannot reach the background from inside the content layer's own
               stacking context. So it is pre-converted to a tight white-on-transparent PNG
@@ -677,8 +688,35 @@ const Outro: Page = () => (
         <CommandPair sep="&&" />
       </div>
 
-      {/* block 1 — me */}
-      <div style={{ marginTop: 92, display: 'flex', alignItems: 'center', gap: 60 }}>
+      {/* The caveat sits straight under the skills it applies to, before the contact block.
+          inline-flex so the box hugs its text instead of reading as a full-width banner.
+          U+FE0E forces the text presentation of the warning sign; without it the glyph
+          renders as a colour emoji and shouts. */}
+      <div
+        style={{
+          marginTop: 66,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 22,
+          padding: '20px 34px',
+          background: PANEL,
+          border: `1px solid ${LINE}`,
+          borderRadius: 'var(--osd-radius)',
+          fontSize: 32,
+          lineHeight: 1.4,
+          color: MUTED,
+        }}
+      >
+        <span aria-hidden="true" style={{ fontSize: 34, color: DIM }}>
+          {'\u26A0\uFE0E'}
+        </span>
+        <span>
+          highly personalised · <code style={{ fontFamily: MONO }}>glab</code>-only · vibe coded ·
+          work in progress
+        </span>
+      </div>
+
+      <div style={{ marginTop: 78, display: 'flex', alignItems: 'center', gap: 60 }}>
         {/* Rounded square rather than a circle: it is pixel art, and a circular crop
             fights the grid the artwork is drawn on. */}
         <img
@@ -697,33 +735,6 @@ const Outro: Page = () => (
             fb<Hat>@</Hat>zogan.de
           </Contact>
         </div>
-      </div>
-
-      {/* block 2 — warnings. inline-flex so the box hugs its text instead of reading as a
-          full-width banner. U+FE0E forces the text presentation of the warning sign;
-          without it the glyph renders as a colour emoji and shouts. */}
-      <div
-        style={{
-          marginTop: 84,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 22,
-          padding: '20px 34px',
-          background: PANEL,
-          border: `1px solid ${LINE}`,
-          borderRadius: 'var(--osd-radius)',
-          fontSize: 32,
-          lineHeight: 1.4,
-          color: MUTED,
-        }}
-      >
-        <span aria-hidden="true" style={{ fontSize: 34, color: DIM }}>
-          {'\u26A0\uFE0E'}
-        </span>
-        <span>
-          work in progress · highly personalised ·{' '}
-          <code style={{ fontFamily: MONO }}>glab</code>-only · vibe coded
-        </span>
       </div>
     </div>
   </Shell>
