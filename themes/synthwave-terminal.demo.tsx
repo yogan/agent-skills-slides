@@ -1,5 +1,4 @@
 import type { DesignSystem, Page } from '@open-slide/core';
-import { useSlidePageNumber } from '@open-slide/core';
 
 export const design: DesignSystem = {
   palette: { bg: '#0A0716', text: '#E8EDF2', accent: '#FFAE3D' },
@@ -129,37 +128,7 @@ const Horizon = () => (
   </svg>
 );
 
-const Footer = ({ marker }: { marker: string }) => {
-  const { current, total } = useSlidePageNumber();
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: PAD,
-        right: PAD,
-        bottom: 52,
-        zIndex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        fontFamily: MONO,
-        fontSize: 22,
-        color: DIM,
-        letterSpacing: '0.06em',
-      }}
-    >
-      <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ width: 10, height: 10, background: 'var(--osd-accent)' }} />
-        {marker}
-      </span>
-      <span>
-        {String(current).padStart(2, '0')} / {String(total).padStart(2, '0')}
-      </span>
-    </div>
-  );
-};
-
-const Shell = ({ marker, children }: { marker?: string; children: React.ReactNode }) => (
+const Shell = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
       width: '100%',
@@ -169,7 +138,7 @@ const Shell = ({ marker, children }: { marker?: string; children: React.ReactNod
       backgroundImage: TEXTURE,
       color: 'var(--osd-text)',
       fontFamily: 'var(--osd-font-body)',
-      padding: `${PAD}px ${PAD}px 152px`,
+      padding: PAD,
       boxSizing: 'border-box',
       overflow: 'hidden',
     }}
@@ -187,7 +156,6 @@ const Shell = ({ marker, children }: { marker?: string; children: React.ReactNod
     >
       {children}
     </div>
-    {marker ? <Footer marker={marker} /> : null}
   </div>
 );
 
@@ -280,7 +248,7 @@ const Cover: Page = () => (
 );
 
 const Content: Page = () => (
-  <Shell marker="the-theme">
+  <Shell>
     <Kicker>NEON IS SCENERY · TYPE IS PLAIN</Kicker>
     <div style={{ marginTop: 28 }}>
       <SkillH name="do-the-thing" sub="what this page is for" />
@@ -334,7 +302,7 @@ const Content: Page = () => (
 );
 
 const Closer: Page = () => (
-  <Shell marker="wrap">
+  <Shell>
     <h2
       style={{
         fontFamily: 'var(--osd-font-display)',

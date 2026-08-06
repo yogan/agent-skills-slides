@@ -15,7 +15,7 @@ React component on a fixed 1920×1080 canvas.
 ## Starting another deck — or adding the next slide?
 
 Build from **`themes/synthwave-terminal.md`** — the palette, type scale, layout metrics and
-paste-ready `Shell` / `Footer` / `Kicker` / `SkillH` components live there, with the reasoning
+paste-ready `Shell` / `Kicker` / `SkillH` components live there, with the reasoning
 for each. `/create-slide` will offer it as a picker option, and the dev UI's **Themes** panel
 previews it live from `themes/synthwave-terminal.demo.tsx`.
 
@@ -62,10 +62,12 @@ the deck and use the **Export** menu in the slide toolbar:
 
 ## The pages
 
-| # | Page | Footer marker |
-| --- | --- | --- |
-| 01 | Title — **no footer, no page number, by design** | — |
-| 02 | `/review-mr` — five verbs, what it does | `review-mr` |
+| # | Page |
+| --- | --- |
+| 01 | Title |
+| 02 | `/review-mr` — five verbs, what it does |
+
+There is **no slide furniture at all** — no footer, no page numbers, no running topic marker.
 
 ## Speaker notes
 
@@ -91,14 +93,11 @@ Everything is one file: `slides/mr-review-with-agent-skills/index.tsx`. `npm run
 | Colours, fonts, hero size | the `design` const at the top; or live-tweak via the **Design** button in the dev UI and hit Save. Everything reads from it, so there are no stray hexes to chase. Mirror any change into `themes/synthwave-terminal.md`. |
 | Anything on one page | find its component — `grep -n ": Page = " slides/*/index.tsx` |
 | **Add a page** | write the component, add it to the `export default [...]` array, **and add a matching `notes` entry at the same index**. Page numbers update themselves via `useSlidePageNumber()`. |
-| Give the title page a footer after all | pass a `marker` to its `<Shell>`; omitting `marker` is what suppresses the footer |
-| The footer marker per page | the `marker` prop on each `<Shell>` |
 
 ## Layout rules worth knowing before you edit
 
 The canvas does **not** scroll — anything past 1080px is silently cropped. Content sits in a
-120px-padded band that stops 152px above the bottom edge (the footer lives there), so the
-usable height is about **808px**. Before adding a line, count: `font-size × line-height ×
+symmetrically 120px-padded band, so the usable height is about **840px**. Before adding a line, count: `font-size × line-height ×
 lines`, plus gaps. If it does not fit, split the page rather than shrinking the type — this
 deck is built to be read from the back of a bright room.
 

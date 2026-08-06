@@ -23,7 +23,7 @@ the deck can carry the severity glyphs (🔴🟠🟡🔵) without a colour clash
 | `accent` | `#FFAE3D` | **sunset gold.** Eyebrows, the `/` on command names, key words, active states — 10.8:1 on bg |
 | `body` | `#C9D5E1` | secondary body copy, table cells — 13.0:1 |
 | `muted` | `#98A6BC` | supporting copy, sub-headings — 8.1:1 |
-| `dim` | `#6E7C95` | **furniture only** — footer, footnotes. 4.7:1, the one token below 4.5 in places, so nothing load-bearing goes here |
+| `dim` | `#6E7C95` | de-emphasis only — separators, footnotes. 4.7:1, the one token that dips below 4.5 over a bloom, so nothing load-bearing goes here |
 | `line` | `#241C3C` | hairlines, panel borders |
 | `panel` | `#130E24` | code / callout panel fill |
 
@@ -69,16 +69,15 @@ Type-scale overrides (against `slide-authoring` defaults):
 | Page heading | 76 px, weight 800 |
 | Skill-name heading (mono) | 76 px, weight 700 |
 | Body | 30–36 px |
-| Caption / footer | 22–26 px |
+| Caption / label | 22–26 px |
 
 Body never below 28 px — that is the projector floor.
 
 ## Layout
 
-- Canvas 1920 × 1080. Content padding **120 px**, bottom padding **152 px** (the footer
-  lives in that band). Usable height ≈ **808 px**.
-- Content is **vertically centred** in the band above the footer, left-aligned. The footer is
-  absolutely positioned, so the furniture never moves even though the content block does.
+- Canvas 1920 × 1080. Symmetric content padding of **120 px**. Usable height ≈ **840 px**.
+- Content is **vertically centred**, left-aligned.
+- **No slide furniture at all** — no footer, no page number, no running topic marker.
 - The canvas does not scroll. Sum `font-size × line-height × lines` plus gaps before adding a
   line; split the page rather than shrinking type.
 
@@ -135,7 +134,8 @@ long and position-specific. The rules that matter if you re-derive them:
   verticals stop short and the grid visibly runs out at the sides.
 - **Grid falloff**: one radial mask anchored at bottom-centre, in the grid box's own units so
   the circle stretches to an ellipse — fades the sides and the distance in a single pass.
-- **Front-edge scrim**: darkens y 950→1080 so the grid sinks into shadow behind the footer.
+- **Front-edge scrim**: darkens y 950→1080 so the grid sinks into shadow at the bottom edge
+  instead of ending at full strength against the frame.
 - **No horizon line.** It reads as a stray rule across the canvas, not a horizon.
 - **Scanlines at a 6 px pitch**, not 3–4 px — a tighter pitch moirés against projector pixels.
 
@@ -144,7 +144,7 @@ long and position-specific. The rules that matter if you re-derive them:
 ```tsx
 const PAD = 120;
 
-const Shell = ({ marker, children }: { marker?: string; children: React.ReactNode }) => (
+const Shell = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
       width: '100%',
@@ -154,7 +154,7 @@ const Shell = ({ marker, children }: { marker?: string; children: React.ReactNod
       backgroundImage: TEXTURE,
       color: 'var(--osd-text)',
       fontFamily: 'var(--osd-font-body)',
-      padding: `${PAD}px ${PAD}px 152px`,
+      padding: PAD,
       boxSizing: 'border-box',
       overflow: 'hidden',
     }}
@@ -172,50 +172,14 @@ const Shell = ({ marker, children }: { marker?: string; children: React.ReactNod
     >
       {children}
     </div>
-    {marker ? <Footer marker={marker} /> : null}
   </div>
 );
 ```
 
-Omitting `marker` suppresses the footer — that is how a title page carries no furniture.
-
-### Footer
-
-Pull the page number from `useSlidePageNumber()` — never hardcode it.
-
-```tsx
-import { useSlidePageNumber } from '@open-slide/core';
-
-const Footer = ({ marker }: { marker: string }) => {
-  const { current, total } = useSlidePageNumber();
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: 120,
-        right: 120,
-        bottom: 52,
-        zIndex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        fontFamily: MONO,
-        fontSize: 22,
-        color: DIM,
-        letterSpacing: '0.06em',
-      }}
-    >
-      <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ width: 10, height: 10, background: 'var(--osd-accent)' }} />
-        {marker}
-      </span>
-      <span>
-        {String(current).padStart(2, '0')} / {String(total).padStart(2, '0')}
-      </span>
-    </div>
-  );
-};
-```
+**No footer, no page numbers, no topic markers.** Dropped deliberately: the deck is talked
+over during a live demo, nobody navigates by slide number, and the furniture was competing
+with the floor grid at the bottom of the canvas. If you ever want it back, `useSlidePageNumber()`
+is the hook — never hardcode `n` / `total`.
 
 ### Eyebrow
 
@@ -295,7 +259,7 @@ const Cover: Page = () => (
 );
 
 const Content: Page = () => (
-  <Shell marker="chapter-01">
+  <Shell>
     <Kicker>LOCAL ONLY · NO NETWORK</Kicker>
     <div style={{ marginTop: 28 }}>
       <SkillH name="do-the-thing" sub="what it is for" />

@@ -23,7 +23,7 @@ What went, and what that means:
   palette comment says to add it back rather than paste a hex.
 
 What deliberately survived: the whole visual system (background art, palette, `Shell`,
-`Footer`, `SkillH`) and the theme bundle. That is the part worth keeping stable while the
+`SkillH`) and the theme bundle. That is the part worth keeping stable while the
 content churns — which is exactly why it was extracted into `themes/` first.
 
 **The assets are retained but unused.** `gitlab.svg`, `docker.svg` and `claude.svg` were the
@@ -43,15 +43,18 @@ argument (**it drafts, you post**) and everything else is setup for it.
 
 The handoff asked for consistent slide furniture. Top-alignment left 200–350px of dead space
 under the sparser pages; it read as unfinished rather than airy. So the content block is
-vertically centred in the band above the footer. The **furniture** is still fixed: the footer
-marker and page number sit at an identical absolute position on every page that has one, which
-is the part the eye actually tracks between slides. One `justifyContent` in `Shell` to revert.
+vertically centred, with symmetric 120px padding. One `justifyContent` in `Shell` to revert.
 
-### The title page has no furniture at all
+### No slide furniture at all
 
-No footer, no page number, no subtitle — specified that way. `Shell`'s `marker` prop is
-optional and omitting it suppresses the footer. Numbering on the rest is unaffected, because
-`useSlidePageNumber()` counts pages rather than footers.
+The handoff asked for a page number and a small topic marker. Both are gone, on request: the
+deck is talked over during a live demo, nobody navigates by slide number, and the footer was
+competing with the floor grid at exactly the point where the grid is densest. Dropping it also
+freed the 32px of bottom padding that had been reserved for it, so the content band is now
+symmetric.
+
+`useSlidePageNumber()` is the hook if it ever comes back — the numbers must never be
+hardcoded, since they would rot the moment a page is inserted.
 
 ## Look and feel
 
@@ -98,8 +101,9 @@ Requested after the first pass, and built to stay projector-safe:
   across renders because every position is literal. Density is biased upward and stops before
   the grid begins; anything in the text band is dimmed to ~55 %, and nothing exceeds 2.2px or
   0.62 alpha. They are scenery, not content.
-- **A front-edge scrim** (`#acr-floor`, y 950→1080) sinks the grid into shadow exactly where
-  the footer sits, so the marker and page number stay legible over the densest part.
+- **A front-edge scrim** (`#acr-floor`, y 950→1080) sinks the grid into shadow at the bottom
+  edge, so it recedes instead of ending at full strength against the frame. It originally
+  protected the footer; it earns its place on looks alone now that the footer is gone.
 - **No horizon line.** There was one; it read as a stray rule across the canvas rather than a
   horizon, so it came out.
 - **Scanlines at a 6px pitch**, not the 3–4px a CRT would suggest — a tighter pitch moirés
@@ -172,8 +176,8 @@ Inside the deck, every colour now resolves to one place:
 - The neon lives as bare `r,g,b` triplets, so the background blooms and the grid strokes
   derive from the same values instead of repeating them.
 
-Change the accent in `design.palette` and the footer square, the eyebrows, the `/` sigils, the
-topic-table states and the panel rule all follow.
+Change the accent in `design.palette` and the eyebrows, the `/` sigils and the `@` on the
+handle all follow.
 
 ## Content accuracy
 

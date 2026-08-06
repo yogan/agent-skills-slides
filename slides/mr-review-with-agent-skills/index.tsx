@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
-import { useSlidePageNumber } from '@open-slide/core';
 
 export const design: DesignSystem = {
   // accent = "sunset gold". Warmer than the amber this deck started with (hue 40° → 35°),
@@ -29,7 +28,7 @@ const BG = design.palette.bg;
 const MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace';
 const BODY = '#C9D5E1'; // secondary body copy, table cells
 const MUTED = '#98A6BC'; // supporting copy, sub-headings
-const DIM = '#6E7C95'; // furniture only — footer, footnotes. Never load-bearing.
+const DIM = '#6E7C95'; // de-emphasis only — separators. Never load-bearing.
 
 // Synthwave neon — background only, never text, so everything *readable* still
 // answers to exactly one accent. Kept as bare `r,g,b` triplets because the blooms
@@ -137,8 +136,8 @@ const PAD = 120;
 /**
  * The synthwave perspective grid along the bottom edge, plus its horizon glow.
  * Vanishing point (960, 820); rows spaced quadratically so they bunch toward the
- * horizon. Sits behind everything and is masked to fade upward, so the footer and
- * the lowest line of a dense page still read cleanly over it.
+ * horizon. Sits behind everything and is masked to fade upward, so the lowest line
+ * of a dense page still reads cleanly over it.
  */
 const Horizon = () => (
   <svg
@@ -167,8 +166,8 @@ const Horizon = () => (
       <mask id="acr-grid-mask" maskUnits="userSpaceOnUse" x="0" y="820" width="1920" height="260">
         <rect x="0" y="820" width="1920" height="260" fill="url(#acr-falloff)" />
       </mask>
-      {/* Front-edge shadow. The grid is densest exactly where the footer sits, so it
-          sinks into darkness there — keeps the marker and page number readable. */}
+      {/* Front-edge shadow, so the grid sinks into darkness at the very bottom edge
+          instead of ending at full strength against the frame. */}
       <linearGradient id="acr-floor" gradientUnits="userSpaceOnUse" x1="0" y1="950" x2="0" y2="1080">
         <stop offset="0%" stopColor={BG} stopOpacity="0" />
         <stop offset="100%" stopColor={BG} stopOpacity="0.92" />
@@ -220,42 +219,10 @@ const Horizon = () => (
   </svg>
 );
 
-const Footer = ({ marker }: { marker: string }) => {
-  const { current, total } = useSlidePageNumber();
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: PAD,
-        right: PAD,
-        bottom: 52,
-        zIndex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        fontFamily: MONO,
-        fontSize: 22,
-        color: DIM,
-        letterSpacing: '0.06em',
-      }}
-    >
-      <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <span style={{ width: 10, height: 10, background: 'var(--osd-accent)' }} />
-        {marker}
-      </span>
-      <span>
-        {String(current).padStart(2, '0')} / {String(total).padStart(2, '0')}
-      </span>
-    </div>
-  );
-};
-
-// Content is centred in the band above the footer rather than pinned to the top:
-// the pages carry deliberately little text, and top-alignment left 200–350px of
-// dead space below the sparser ones. The footer stays absolutely positioned, so
-// the slide furniture does not move even though the content block does.
-// `marker` omitted → no footer at all (the title page carries no furniture).
-const Shell = ({ marker, children }: { marker?: string; children: ReactNode }) => (
+// Content is centred on the canvas rather than pinned to the top: the pages carry
+// deliberately little text, and top-alignment left a lot of dead space below the
+// sparser ones. Padding is symmetric — there is no footer to reserve room for.
+const Shell = ({ children }: { children: ReactNode }) => (
   <div
     style={{
       width: '100%',
@@ -265,7 +232,7 @@ const Shell = ({ marker, children }: { marker?: string; children: ReactNode }) =
       backgroundImage: TEXTURE,
       color: 'var(--osd-text)',
       fontFamily: 'var(--osd-font-body)',
-      padding: `${PAD}px ${PAD}px 152px`,
+      padding: PAD,
       boxSizing: 'border-box',
       overflow: 'hidden',
     }}
@@ -284,7 +251,6 @@ const Shell = ({ marker, children }: { marker?: string; children: ReactNode }) =
     >
       {children}
     </div>
-    {marker ? <Footer marker={marker} /> : null}
   </div>
 );
 
@@ -382,7 +348,7 @@ const Row = ({ label, note }: { label: string; note: string }) => (
 );
 
 const ReviewMr: Page = () => (
-  <Shell marker="review-mr">
+  <Shell>
     <SkillH name="review-mr" sub="reviewing someone else's MR" />
 
     <div style={{ marginTop: 64 }}>
