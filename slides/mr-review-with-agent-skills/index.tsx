@@ -31,6 +31,8 @@ const MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospac
 const BODY = '#C9D5E1'; // secondary body copy, table cells
 const MUTED = '#98A6BC'; // supporting copy, sub-headings
 const DIM = '#6E7C95'; // de-emphasis only — separators. Never load-bearing.
+const LINE = '#241C3C'; // hairlines, box borders
+const PANEL = '#130E24'; // callout fill
 
 // Synthwave neon — background only, never text, so everything *readable* still
 // answers to exactly one accent. Kept as bare `r,g,b` triplets because the blooms
@@ -254,6 +256,22 @@ const Shell = ({ children }: { children: ReactNode }) => (
       {children}
     </div>
   </div>
+);
+
+/** Page heading, sans and heavy. */
+const H = ({ children }: { children: ReactNode }) => (
+  <h2
+    style={{
+      fontFamily: 'var(--osd-font-display)',
+      fontSize: 76,
+      fontWeight: 800,
+      lineHeight: 1.1,
+      letterSpacing: '-0.02em',
+      margin: 0,
+    }}
+  >
+    {children}
+  </h2>
 );
 
 /** Heading for a skill name — monospace, because that is how you type it. */
@@ -578,13 +596,15 @@ const Contact = ({ children }: { children: ReactNode }) => (
 
 const Outro: Page = () => (
   <Shell>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 72 }}>
+    <H>Agentic Code Reviews</H>
+
+    <div style={{ marginTop: 121, display: 'flex', alignItems: 'center', gap: 72 }}>
       {/* Rounded square rather than a circle: it is pixel art, and a circular crop
           fights the grid the artwork is drawn on. */}
       <img
         src={goomba}
         alt=""
-        style={{ width: 240, height: 240, borderRadius: 20, flexShrink: 0 }}
+        style={{ width: 220, height: 220, borderRadius: 20, flexShrink: 0 }}
       />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
         <Contact>
@@ -599,8 +619,32 @@ const Outro: Page = () => (
       </div>
     </div>
 
-    <div style={{ marginTop: 84, fontSize: 34, lineHeight: 1.4, color: MUTED }}>
-      Work in progress · highly personalised · <code style={{ fontFamily: MONO }}>glab</code>-only
+    {/* inline-flex so the box hugs its text — a full-width rule would read as a banner
+        rather than an aside. U+FE0E forces the text presentation of the warning sign;
+        without it the glyph renders as a colour emoji and shouts. */}
+    <div
+      style={{
+        marginTop: 76,
+        alignSelf: 'flex-start',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 22,
+        padding: '20px 34px',
+        background: PANEL,
+        border: `1px solid ${LINE}`,
+        borderRadius: 'var(--osd-radius)',
+        fontSize: 32,
+        lineHeight: 1.4,
+        color: MUTED,
+      }}
+    >
+      <span aria-hidden="true" style={{ fontSize: 34, color: DIM }}>
+        {'\u26A0\uFE0E'}
+      </span>
+      <span>
+        work in progress · highly personalised ·{' '}
+        <code style={{ fontFamily: MONO }}>glab</code>-only · vibe coded
+      </span>
     </div>
   </Shell>
 );
