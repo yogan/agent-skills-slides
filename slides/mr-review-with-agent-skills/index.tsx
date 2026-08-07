@@ -769,7 +769,7 @@ export const notes: (string | undefined)[] = [
     '• t1 trivial, t2 the real cache bug (keep the grilling short)',
   ].join('\n'),
   // 04 outro
-  ['• Do not oversell it', '• Questions'].join('\n'),
+  ['• Questions'].join('\n'),
 ];
 
 export const meta: SlideMeta = {

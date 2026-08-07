@@ -40,7 +40,6 @@ then show me the overview and stop. Don't ask me anything before the overview.
 ## 04 · Outro
 
 ```
-• Do not oversell it
 • Questions
 ```
 
