@@ -1,6 +1,6 @@
 # Agentic Code Reviews — talk deck
 
-Slides for the ~30 minute talk on reviewing GitLab MRs (and answering the review) with
+Slides for the ~60 minute talk on reviewing GitLab MRs (and answering the review) with
 Claude Code agent skills. Built with [open-slide](https://open-slide.dev/): each page is a
 React component on a fixed 1920×1080 canvas.
 
