@@ -3,7 +3,7 @@
 Cues only. Same text as the `notes` export in the deck, which is what the presenter window
 shows on `P`. **Edit both if you edit one.**
 
-> **State: building up.** Four slides — see [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
+> Four slides. Delivered 2026-08-06; it ran ~60 min, so pace accordingly.
 
 ## 01 · Title
 

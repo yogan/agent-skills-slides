@@ -6,11 +6,10 @@ React component on a fixed 1920×1080 canvas.
 
 **The deck is support, not the act.** The talk is ~90 % live terminal demo.
 
-> ### State: building up — 4 slides
->
-> The deck was pruned back to a title and one `/review-mr` slide, and content is being built up
-> again from there. What is here is finished; it is just not finished *talk*.
-> See [DECISIONS.md](DECISIONS.md) § "Reset to a clean base".
+> **Delivered 2026-08-06** at ZAM (Open Source Contributors), Erlangen. Four slides, and it
+> ran ~60 min rather than the 30 it was planned for — budget an hour if you give it again.
+> Talk-day checklist: [`e2e/RUNBOOK.md`](https://github.com/yogan/agent-skills) in the skills
+> repo.
 
 ## Starting another deck — or adding the next slide?
 
@@ -132,7 +131,7 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 | `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 4 pages, `notes`, `design`, and the background art |
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
-| `assets/` | avatar, ZAM mark, three line icons, plus three unused brand icons — see [`CREDITS.md`](assets/CREDITS.md) |
+| `assets/` | avatar, ZAM mark, three line icons — see [`CREDITS.md`](assets/CREDITS.md) |
 | `previews/` | rendered PNG of every page — plus `*-intro.png` for the skill pages as they first appear, before any row reveals |
 | [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
 | [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + the show-of-hands script, phone-readable |
