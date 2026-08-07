@@ -124,6 +124,17 @@ deck is built to be read from the back of a bright room.
 
 Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 
+### Page renders — local only
+
+The canvas is fixed and does not scroll, so the reliable way to check overflow and contrast is
+to look at a real 1920×1080 render rather than reason about the arithmetic. Capture the deck in
+play mode with headless Chrome into `previews/`; there is no script for it in the repo, it was
+done ad hoc.
+
+`previews/` is **gitignored**, so keep as many rounds as you like — they never enter the
+repository. If you capture a page with `<Steps>`, remember it swallows an `ArrowRight` per
+reveal: a naive walk captures it blank and silently mis-indexes every page after it.
+
 ## Repo map
 
 | Path | What |
@@ -132,7 +143,7 @@ Fuller reference: `.agents/skills/slide-authoring/SKILL.md`.
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
 | `assets/` | avatar, ZAM mark, three line icons — see [`CREDITS.md`](assets/CREDITS.md) |
-| `previews/` | rendered PNG of every page — plus `*-intro.png` for the skill pages as they first appear, before any row reveals |
+| `previews/` | **gitignored.** Local page renders, when you want to eyeball overflow and contrast without presenting — see below |
 | [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
 | [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + the show-of-hands script, phone-readable |
 | `.agents/`, `.claude/` | open-slide's own authoring skills, shipped by the framework |

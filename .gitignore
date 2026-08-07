@@ -1,3 +1,7 @@
 node_modules
 dist
 .DS_Store
+
+# Page renders. Regenerated from the deck on demand and only ever used locally —
+# committing each round put 32 MB of dead screenshots in this repo's history once.
+previews

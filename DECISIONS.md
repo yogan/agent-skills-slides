@@ -191,9 +191,12 @@ while `review-mr` defaults to German elsewhere.
 
 ## Verification
 
-`npm run build` is clean. Every page is rendered in headless Chrome at exactly 1920×1080 in
-play mode and inspected — that is what `previews/` contains, and it is how the overflow and
-contrast checks were done rather than by trusting arithmetic. No page overflows the canvas.
+`npm run build` is clean. Every page was rendered in headless Chrome at exactly 1920×1080 in
+play mode and inspected — that is how the overflow and contrast checks were done, rather than by
+trusting arithmetic. No page overflows the canvas.
+
+Those renders are **local artifacts**, written to a gitignored `previews/` and regenerated on
+demand. They were committed once and it cost 32 MB of history, so they stay out.
 
 If you add a page with `<Steps>`, note that it swallows an `ArrowRight` per reveal: a naive
 screenshot walk will capture it blank and silently mis-index every page after it.
