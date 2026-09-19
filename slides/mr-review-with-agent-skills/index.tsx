@@ -30,6 +30,10 @@ export const design: DesignSystem = {
 // The full token set is documented in `themes/synthwave-terminal.md`, which is what
 // future slides should be built from.
 const BG = design.palette.bg;
+// The overview diagram is one big SVG, so it needs all four of these as literals.
+const TEXT = design.palette.text;
+const ACCENT = design.palette.accent;
+const SANS = design.fonts.body;
 
 const MONO = 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace';
 const BODY = '#C9D5E1'; // secondary body copy, table cells
@@ -654,7 +658,207 @@ const ReworkMr: Page = () => (
   </Shell>
 );
 
-// ── 04 · Outro ───────────────────────────────────────────────────────────────
+// ── 04 · Overview ────────────────────────────────────────────────────────────
+
+/**
+ * The skills-overview diagram from the agent-skills README, redrawn for a projector.
+ *
+ * **Why not the PNG.** `docs/skills-overview-{light,dark}.png` exists and is the same graph,
+ * but its natural size is 769x694 with 11-13px type. The slot on this page is 1680x700, so it
+ * is height-limited to roughly 1:1 — the labels would land at 11-13px on a 1920px canvas,
+ * against a deck whose *smallest* type is 26px. Full-bleed only buys 16px. The renderer will
+ * not draw it landscape either, and says so on purpose: "`direction` is not yours to set — the
+ * renderer draws an embedded figure both ways, measures each, and keeps the one that stays
+ * legible." Both readings are right; a README figure and a slide are not the same picture.
+ *
+ * So: same nine nodes, same nine edges, relaid out wide and set in the deck's own type scale.
+ * If the spec in `docs/skills-overview.json` changes, this has to be edited by hand — the two
+ * are not generated from one source, and that is the cost of this decision.
+ *
+ * **The edge labels and the legend are gone on purpose.** The README figure has to answer
+ * unattended; this one has a speaker standing next to it, who says "explainer, opt-in" and
+ * "violet is yours to install" out loud and better than 25px italic can. What is left is the
+ * shape of the thing — which is the only part the room cannot get from the talk track.
+ *
+ * Colour follows the source's two-family split — a skill you install vs. shared code — mapped
+ * onto this palette: violet for skills, cyan for shared code. The source's green is not in this
+ * deck's box of crayons, and cyan already reads as plumbing here because the horizon glow is.
+ *
+ * Geometry is a 4-rank layer cake, y in `RANK`, 84px boxes, 372px columns on 64px gutters. All
+ * three cyan boxes sit on the bottom rank, so shared code reads as one foundation the skills
+ * stand on rather than as two boxes wedged into the middle of the cascade. Long runs get their
+ * own horizontal channel (`CH`) so two lines never share a stretch of y — overlapping
+ * orthogonal edges read as one line, which is worse than an honest crossing.
+ */
+const COL = { one: 186, two: 622, three: 1058, four: 1494 };
+const RANK = { commands: 0, skills: 244, sub: 424, shared: 596 };
+const NODE_W = 372;
+const NODE_H = 84;
+/**
+ * Horizontal channels through the band under the two commands, nearest the boxes first.
+ *
+ * The assignment is not arbitrary. **The farther an edge travels, the shallower its lane** —
+ * a long edge turns early so its vertical stub off the box is short and nothing gets a chance
+ * to cross it. And no two runs share a lane unless their x-ranges are nowhere near each other:
+ * two collinear segments with a gap between them read as one line that broke, which is exactly
+ * what the first cut of this page looked like.
+ *
+ * What is left is one crossing, where `/review-mr`'s run out to the hook dives past
+ * `/rework-mr`'s run back to the plumbing. That one is forced: the two sweep past each other in
+ * opposite directions to reach targets on the far side, so no lane order removes it.
+ */
+const CH = { near: 118, mid: 152, far: 186, deep: 212 };
+
+const SKILL = { fill: 'rgba(120,60,255,0.20)', stroke: 'rgba(158,118,255,0.90)' };
+const SHARED = { fill: 'rgba(0,217,255,0.11)', stroke: 'rgba(0,217,255,0.62)' };
+
+type DiagramNode = {
+  cx: number;
+  y: number;
+  label: string;
+  detail: string;
+  /** A slash-prefixed label is something you can type, so it is set in mono with an accent `/`. */
+  shared?: boolean;
+};
+
+/**
+ * The two commands each sit centred over one half of the four-column grid — between cols 1
+ * and 2, and between cols 3 and 4. That lands them symmetrically about the canvas centre with
+ * a matching 218px margin at either end, and it keeps `/review-mr` directly above the pair of
+ * skills it pulls in.
+ */
+const COMMAND_LEFT = (COL.one + COL.two) / 2;
+const COMMAND_RIGHT = (COL.three + COL.four) / 2;
+/**
+ * The bottom row takes the same two axes plus the midpoint between them, which spaces its
+ * three boxes evenly — 64px between each, the same gutter the skill columns use, and the same
+ * 218px margin at either end as the row of commands. The outer two then sit directly under
+ * `/review-mr` and `/rework-mr`, so the drawing stands on two vertical axes instead of drifting.
+ */
+const SHARED_MID = (COMMAND_LEFT + COMMAND_RIGHT) / 2;
+
+const NODES: DiagramNode[] = [
+  { cx: COMMAND_LEFT, y: RANK.commands, label: '/review-mr', detail: "someone else's MR" },
+  { cx: COMMAND_RIGHT, y: RANK.commands, label: '/rework-mr', detail: 'your own MR' },
+  { cx: COL.one, y: RANK.skills, label: '/explain-branch', detail: 'a chapter per commit' },
+  { cx: COL.two, y: RANK.skills, label: '/review-branch', detail: 'local critique' },
+  { cx: COL.one, y: RANK.sub, label: '/explain-diff', detail: 'one change explained' },
+  { cx: COL.two, y: RANK.sub, label: '/visualize', detail: 'one diagram of the code' },
+  { cx: COMMAND_LEFT, y: RANK.shared, label: 'diagram engine', detail: 'lib/diagram', shared: true },
+  { cx: SHARED_MID, y: RANK.shared, label: 'GitLab plumbing', detail: 'lib/, per-MR state', shared: true },
+  { cx: COMMAND_RIGHT, y: RANK.shared, label: 'paste-gate Stop hook', detail: 'hooks/, registered by hand', shared: true },
+];
+
+/**
+ * An orthogonal edge: down out of `x1`, across at `mid`, down into `x2`. Corners are rounded
+ * by `r` so the turns match the source figure's elbows rather than reading as a circuit board.
+ * A straight drop needs no elbow and says so.
+ */
+const elbow = (x1: number, y1: number, mid: number, x2: number, y2: number, r = 14) => {
+  if (x1 === x2) return `M ${x1} ${y1} V ${y2}`;
+  const dir = x2 > x1 ? 1 : -1;
+  return [
+    `M ${x1} ${y1}`,
+    `V ${mid - r}`,
+    `Q ${x1} ${mid} ${x1 + dir * r} ${mid}`,
+    `H ${x2 - dir * r}`,
+    `Q ${x2} ${mid} ${x2} ${mid + r}`,
+    `V ${y2}`,
+  ].join(' ');
+};
+
+const B = RANK.commands + NODE_H; // bottom of the command boxes — where four of nine edges start
+const EDGES: string[] = [
+  // Out of /review-mr. Four edges leave the same box, so they leave at four different x, and
+  // the two that run all the way to the bottom rank only turn once on the way.
+  elbow(290, B, CH.deep, COL.one, RANK.skills), // → /explain-branch
+  elbow(360, B, CH.far, COL.two, RANK.skills), // → /review-branch
+  // These two drop the full height of the page. Both enter their box right of x=808, which is
+  // the right edge of the /review-branch and /visualize column — a drop left of that would
+  // fall straight through a box on its way down.
+  elbow(450, B, CH.mid, 860, RANK.shared), // → GitLab plumbing
+  elbow(520, B, CH.near, 1200, RANK.shared), // → paste-gate Stop hook
+  // Out of /rework-mr. It shares an axis with the hook, so that edge is a straight drop the
+  // full height of the page; the hop left to the plumbing is the one crossing.
+  elbow(1150, B, CH.deep, 950, RANK.shared), // → GitLab plumbing
+  elbow(1350, B, 0, 1350, RANK.shared), // → paste-gate Stop hook
+  // The explainer chain, and the two skills that share the drawing code.
+  elbow(COL.one, RANK.skills + NODE_H, 0, COL.one, RANK.sub), // /explain-branch → /explain-diff
+  elbow(COL.one, RANK.sub + NODE_H, 552, 370, RANK.shared), // /explain-diff → diagram engine
+  elbow(COL.two, RANK.sub + NODE_H, 552, 438, RANK.shared), // /visualize → diagram engine
+];
+
+/** One box. Text is centred in it, so both lines share the column's centre line. */
+const DiagramBox = ({ node }: { node: DiagramNode }) => {
+  const skin = node.shared ? SHARED : SKILL;
+  const typed = node.label.startsWith('/');
+  return (
+    <g>
+      <rect
+        x={node.cx - NODE_W / 2}
+        y={node.y}
+        width={NODE_W}
+        height={NODE_H}
+        rx={design.radius}
+        fill={skin.fill}
+        stroke={skin.stroke}
+        strokeWidth={2}
+      />
+      <text
+        x={node.cx}
+        y={node.y + 38}
+        textAnchor="middle"
+        fontFamily={typed ? MONO : SANS}
+        fontSize={30}
+        fontWeight={typed ? 600 : 700}
+        fill={TEXT}
+      >
+        {typed ? <tspan fill={ACCENT}>/</tspan> : null}
+        {typed ? node.label.slice(1) : node.label}
+      </text>
+      <text x={node.cx} y={node.y + 68} textAnchor="middle" fontFamily={SANS} fontSize={24} fill={MUTED}>
+        {node.detail}
+      </text>
+    </g>
+  );
+};
+
+const Overview: Page = () => (
+  <Shell>
+    <div>
+      <H>How the skills fit together</H>
+
+      <svg
+        width={1680}
+        height={680}
+        viewBox="0 0 1680 680"
+        style={{ display: 'block', marginTop: 56, overflow: 'visible' }}
+        aria-hidden="true"
+      >
+        <defs>
+          {/* `markerUnits="strokeWidth"` scales this by the 2px stroke, so the head is 14px. */}
+          <marker id="acr-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill={MUTED} />
+          </marker>
+        </defs>
+
+        {/* Edges first, so a box always paints over a line rather than the other way round.
+            MUTED, not DIM: DIM is this deck's "separators only, never load-bearing" grey, and
+            on a diagram the lines ARE the argument — they have to survive a pale projector. */}
+        <g fill="none" stroke={MUTED} strokeWidth={2} markerEnd="url(#acr-arrow)">
+          {EDGES.map((d) => (
+            <path key={d} d={d} />
+          ))}
+        </g>
+        {NODES.map((node) => (
+          <DiagramBox key={node.label} node={node} />
+        ))}
+      </svg>
+    </div>
+  </Shell>
+);
+
+// ── 05 · Outro ───────────────────────────────────────────────────────────────
 
 const Contact = ({ icon, children }: { icon: string; children: ReactNode }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 26 }}>
@@ -771,7 +975,15 @@ export const notes: (string | undefined)[] = [
     '• Hat switch — /rework-mr !3',
     '• t1 trivial, t2 the real cache bug (keep the grilling short)',
   ].join('\n'),
-  // 04 outro
+  // 04 overview — the page is deliberately unlabelled, so these lines are the labels
+  [
+    '• Violet = a skill you install · cyan = shared code, comes with the clone',
+    '• /review-mr pulls in /explain-branch (opt-in) and seeds findings from /review-branch',
+    '• /explain-branch resolves + renders through /explain-diff',
+    '• /explain-diff and /visualize both draw through the same engine',
+    '• Both commands share the GitLab plumbing, and every paste is gated by the Stop hook',
+  ].join('\n'),
+  // 05 outro
   ['• Questions'].join('\n'),
 ];
 
@@ -781,4 +993,4 @@ export const meta: SlideMeta = {
   createdAt: '2026-08-05T15:19:53.556Z',
 };
 
-export default [Title, ReviewMr, ReworkMr, Outro] satisfies Page[];
+export default [Title, ReviewMr, ReworkMr, Overview, Outro] satisfies Page[];

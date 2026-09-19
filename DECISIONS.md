@@ -3,9 +3,10 @@
 Why the deck looks and behaves the way it does. Ordered roughly by how likely you are to
 disagree.
 
-The deck is four pages and deliberately sparse — the talk is ~90 % live terminal demo, and
-every page is talked over while a real command runs. Anything that needed a diagram or a wall
-of text belonged in the demo instead.
+The deck is five pages and deliberately sparse — the talk is ~90 % live terminal demo, and
+every page is talked over while a real command runs. Anything that needed a wall of text
+belonged in the demo instead. The one diagram earns its place by showing a shape the demo
+cannot: how the skills compose.
 
 ## Stepped reveals on the skill pages
 
@@ -64,6 +65,32 @@ for it, so the content band is symmetric.
 
 `useSlidePageNumber()` is the hook if it ever comes back — the numbers must never be
 hardcoded, since they would rot the moment a page is inserted.
+
+## The overview diagram is redrawn, not embedded
+
+Page 04 is the same graph as `docs/skills-overview-{light,dark}.png` in the skills repo, drawn
+again in SVG inside `index.tsx`. Three reasons, in the order they decided it:
+
+**It would not have been readable.** The source figure's natural size is 769×694 with 11–13px
+type. The slot on the page is 1680×700, so it is height-limited to about 1:1 and the labels
+would have landed at 11–13px on a 1920px canvas — against a deck whose *smallest* type is 26px.
+Full-bleed buys 16px, which is still less than two thirds of the floor.
+
+**Landscape was not on offer.** The obvious fix is to lay the graph out left-to-right, which
+fits the slot's shape. `lib/diagram` refuses, and is right to: *"`direction` is not yours to
+set — the renderer draws an embedded figure both ways, measures each, and keeps the one that
+stays legible."* It measured, and for a README that answer is correct. A slide is a different
+question, so it gets a different drawing rather than an override.
+
+**A slide and a README want different pictures.** The README figure carries labels on every
+edge and a legend, because nobody is standing next to it. The slide has a speaker, so both come
+off and live in the notes instead — what is left is the shape, which is the part the room
+cannot get from the talk track. All three cyan boxes also move to one bottom row, so shared
+code reads as a foundation rather than as two boxes wedged into the middle of the cascade.
+
+**The cost is real:** the two drawings are not generated from one source, so a change to
+`docs/skills-overview.json` has to be made here by hand. Nine nodes and nine edges, once a
+year at most — cheaper than shipping a figure nobody in row six can read.
 
 ## Look and feel
 
