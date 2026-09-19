@@ -17,22 +17,30 @@ settle.
 
 ## Logos and icons — in use
 
-### ZAM wordmark
+### Seneca phoenix
 
-`zam.png` — the official ZAM mark from [zam.haus](https://zam.haus), the stylised "ZAM"
-wordmark (their file is named `ZAM_ohne_Text-Logo-square`, but the mark *is* the wordmark).
-Trademark of ZAM e.V., used nominatively to name the venue.
+`seneca.png` — the official Seneca mark from [seneca.camp](https://seneca.camp/), the phoenix
+without the wordmark (the slide says "Seneca" in type right beside it, so the lettering would
+only repeat itself). Mark of the Seneca orga team, used nominatively to name the event.
 
-**Derived, not the original file.** Upstream ships black-on-white JPEG — no alpha to mask, and
-a `mix-blend-mode` trick cannot reach the slide background from inside the content layer's own
-stacking context. So it was converted once to a tight white-on-transparent PNG (300 × 300 →
-cropped 250 × 80) and is masked like every other icon, taking its colour from the palette.
+**The original artwork, only smaller.** Upstream already ships white-on-transparent RGBA and
+is cropped tight to the glyph, so there is nothing to fix — no alpha to fake, no background to
+knock out. It was resampled once from 1144 × 1377 to **219 × 264** (`sips -Z 264`), which is
+~3.6× the 60 × 72 it renders at, so it stays sharp on a retina panel and in the PDF export.
+40 KB. To redo it, re-fetch and repeat:
 
-The conversion used headless Chrome as an image decoder: draw to a canvas, set
-`alpha = 1 − luminance` with a small contrast stretch so JPEG ringing does not leave a grey
-haze, force RGB to white, then crop to the glyph's bounding box. To redo it, re-fetch
-`https://www.zam.haus/wp-content/uploads/2022/05/cropped-ZAM_ohne_Text-Logo-square-300x300.jpg`
-and repeat that recipe.
+```
+curl -O https://seneca.camp/wp-content/uploads/2023/05/logo-bird.png
+sips -Z 264 logo-bird.png --out seneca.png
+```
+
+**Not masked.** It is the one mark in the deck that does not go through `Icon`. Its gradient —
+sunset orange → crimson → cyan — is already this deck's neon palette, and flattening it to a
+single colour would throw the brand away to buy a consistency nothing here needs.
+
+> The previous edition of this deck carried the ZAM wordmark (`zam.png`) instead; it needed a
+> black-on-white JPEG converting to white-on-transparent first. Both the file and the
+> conversion recipe are in git history if that edition is ever restored.
 
 ### Line icons
 

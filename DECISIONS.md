@@ -142,9 +142,16 @@ palette, nothing baked into the files.
 > apostrophes. An unquoted CSS `url()` token cannot contain an apostrophe, so `url(${src})` is
 > silently dropped and you get a solid coloured box. Quote it: `url("${src}")`.
 
-The ZAM wordmark needed the same treatment for a different reason — upstream ships
-black-on-white JPEG with no alpha to mask, and a blend mode cannot reach the background from
-inside the content layer's own stacking context. `CREDITS.md` records the conversion recipe.
+**The event mark is the deliberate exception.** The Seneca phoenix on the title page is a plain
+`<img>`, not an `Icon` — it arrives white-on-transparent and in full colour, and its gradient
+(sunset orange → crimson → cyan) is already this deck's neon palette. One flat colour would
+have cost the brand and bought nothing. The rule is "marks take the palette colour *when
+flattening them loses nothing*", not "everything is a mask".
+
+> The ZAM wordmark this deck first shipped with did need the mask treatment, for a third
+> reason again — upstream ships black-on-white JPEG with no alpha, and a blend mode cannot
+> reach the background from inside the content layer's own stacking context. `CREDITS.md`
+> keeps that recipe for whoever re-points the deck at a venue whose logo is as awkward.
 
 ### Fonts
 

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 import { Step, Steps } from '@open-slide/core';
 import goomba from '@assets/goomba.png';
-import zamMark from '@assets/zam.png';
+import senecaMark from '@assets/seneca.png';
 import iconGithub from '@assets/tabler-brand-github.svg';
 import iconMastodon from '@assets/tabler-brand-mastodon.svg';
 import iconMail from '@assets/tabler-mail.svg';
@@ -340,15 +340,18 @@ const Title: Page = () => (
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-          {/* The official ZAM mark ships as black-on-white JPEG — no alpha to mask, and
-              blend modes cannot reach the background from inside the content layer's own
-              stacking context. So it is pre-converted to a tight white-on-transparent PNG
-              (see assets/CREDITS.md) and masked like every other icon. 250x80 source. */}
-          <Icon src={zamMark} height={28} width={88} color={MUTED} />
+          {/* The official Seneca phoenix, in full colour — the one mark in the deck that is
+              *not* run through `Icon`. It ships white-on-transparent already, so there is
+              nothing to fix, and its gradient (sunset orange → crimson → cyan) is this
+              deck's neon palette to begin with. Masking it to one flat colour would throw
+              the brand away to buy a consistency nothing here needs. Taller than the 44px
+              avatar above because the silhouette is narrow and detailed — at avatar height
+              the phoenix collapses into a smudge; 60x72 covers about the same visual area. */}
+          <img src={senecaMark} alt="" style={{ width: 60, height: 72, flexShrink: 0 }} />
           <span>
-            Open Source Contributors
+            Seneca
             <span style={{ color: DIM, margin: '0 22px' }}>·</span>
-            2026-08-06
+            2026-09-19
           </span>
         </div>
       </div>

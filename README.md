@@ -6,10 +6,15 @@ React component on a fixed 1920×1080 canvas.
 
 **The deck is support, not the act.** The talk is ~90 % live terminal demo.
 
-> **Delivered 2026-08-06** at ZAM (Open Source Contributors), Erlangen. Four slides, and it
-> ran ~60 min rather than the 30 it was planned for — budget an hour if you give it again.
-> Talk-day checklist: [`e2e/RUNBOOK.md`](https://github.com/yogan/agent-skills) in the skills
-> repo.
+> **This edition: [Seneca](https://seneca.camp/), 2026-09-19** — the Software Engineering
+> Erlangen Camp, a barcamp, so it is a session slot rather than a conference talk.
+>
+> First delivered **2026-08-06** at ZAM (Open Source Contributors), Erlangen. Four slides, and
+> it ran ~60 min rather than the 30 it was planned for — budget an hour. Talk-day checklist:
+> [`e2e/RUNBOOK.md`](https://github.com/yogan/agent-skills) in the skills repo.
+>
+> Re-pointing it at the next event is one row on the title page (mark, name, date) plus the
+> logo in `assets/` — see [`CREDITS.md`](assets/CREDITS.md).
 
 ## Starting another deck — or adding the next slide?
 
@@ -142,7 +147,7 @@ reveal: a naive walk captures it blank and silently mis-indexes every page after
 | `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 4 pages, `notes`, `design`, and the background art |
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
-| `assets/` | avatar, ZAM mark, three line icons — see [`CREDITS.md`](assets/CREDITS.md) |
+| `assets/` | avatar, Seneca mark, three line icons — see [`CREDITS.md`](assets/CREDITS.md) |
 | `previews/` | **gitignored.** Local page renders, when you want to eyeball overflow and contrast without presenting — see below |
 | [`DECISIONS.md`](DECISIONS.md) | every judgement call and why |
 | [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) | notes + the show-of-hands script, phone-readable |

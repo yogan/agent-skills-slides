@@ -3,7 +3,8 @@
 Cues only. Same text as the `notes` export in the deck, which is what the presenter window
 shows on `P`. **Edit both if you edit one.**
 
-> Four slides. Delivered 2026-08-06; it ran ~60 min, so pace accordingly.
+> Four slides. Seneca, 2026-09-19. First delivered 2026-08-06; it ran ~60 min, so pace
+> accordingly — and a barcamp session slot is 45 + 15, so the demo has to stay on rails.
 
 ## 01 · Title
 
