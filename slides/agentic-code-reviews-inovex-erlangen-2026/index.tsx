@@ -178,7 +178,12 @@ const Mark = ({ mode }: { mode: MarkMode }) => {
   );
 };
 
-const Shell = ({ children, mark = 'faint' }: { children: ReactNode; mark?: MarkMode }) => (
+/**
+ * `center` for the title and the close. Content pages hang from a fixed top instead, so their
+ * headings sit at the same height on every page and do not jump on a page change.
+ */
+const CONTENT_TOP = 180;
+const Shell = ({ children, mark = 'faint', center }: { children: ReactNode; mark?: MarkMode; center?: boolean }) => (
   <div
     style={{
       width: '100%',
@@ -188,7 +193,7 @@ const Shell = ({ children, mark = 'faint' }: { children: ReactNode; mark?: MarkM
       backgroundImage: TEXTURE,
       color: 'var(--osd-text)',
       fontFamily: 'var(--osd-font-body)',
-      padding: PAD,
+      padding: center ? PAD : `${CONTENT_TOP}px ${PAD}px ${PAD}px`,
       boxSizing: 'border-box',
       overflow: 'hidden',
     }}
@@ -202,7 +207,7 @@ const Shell = ({ children, mark = 'faint' }: { children: ReactNode; mark?: MarkM
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
+        justifyContent: center ? 'center' : 'flex-start',
       }}
     >
       {children}
@@ -1873,7 +1878,7 @@ const AgenticWord = ({ calm }: { calm: boolean }) => {
 };
 
 const TitleBody = ({ mark }: { mark: MarkMode }) => (
-  <Shell mark={mark}>
+  <Shell mark={mark} center>
     <img src={inovexLogo} alt="inovex" style={{ position: 'absolute', top: 0, left: 0, height: 46 }} />
     <div>
       <div style={{ fontSize: 30, fontWeight: 700, color: MUTED, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
@@ -2115,7 +2120,7 @@ const ReviewMr: Page = () => (
     <Stage>
       <SkillH name="review-mr" />
       <Intro>
-        Support for you as a <Hat>reviewer</Hat> of a merge request.
+        Support for the <Hat>reviewer</Hat> of a merge request.
         <br />
         Understand it, find issues, write good comments, follow up.
       </Intro>
@@ -2126,16 +2131,16 @@ const ReviewMr: Page = () => (
           <Row label="explainer" note="a blog-style article for context" aside="/explain-branch" />
         </Step>
         <Step duration={320}>
-          <Row label="human review" note="yours and other reviewers' threads" aside="synced in as topics" />
+          <Row label="human review" note="own and other reviewers' threads" aside="synced in as topics" />
         </Step>
         <Step duration={320}>
           <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
         </Step>
         <Step duration={320}>
-          <Row label="drafting" note="each topic worded as a comment" aside="posted on your press" />
+          <Row label="drafting" note="each topic worded as a comment" aside="posted by hand only" />
         </Step>
         <Step duration={320}>
-          <Row label="follow-up" note="replies and pushes" aside="agent judges · you ack" />
+          <Row label="follow-up" note="replies and pushes" aside="agent judges · human acks" />
         </Step>
       </RevealList>
     </Stage>
@@ -2149,7 +2154,7 @@ const ReworkMr: Page = () => (
     <Stage>
       <SkillH name="rework-mr" />
       <Intro>
-        Support for you as the <Hat>author</Hat> of a merge request.
+        Support for the <Hat>author</Hat> of a merge request.
         <br />
         Discuss feedback with the agent, agree on plans, fix step by step.
       </Intro>
@@ -2235,15 +2240,15 @@ const Arc = ({ from, to }: { from: number; to: number }) => {
  * A step on the ring. Its glow ring (`aci-glow`) is lit by the comet as it passes; the comet's
  * loop writes the opacity straight to the DOM, so the page never re-renders per frame.
  */
-const StepPill = ({ at, label, detail, glowRef }: { at: number; label: string; detail: string; glowRef?: (el: SVGRectElement | null) => void }) => {
+const StepPill = ({ at, label, detail, who, glowRef }: LoopStep & { at: number; glowRef?: (el: SVGRectElement | null) => void }) => {
   const p = onRing(at);
   const box = { x: p.x - PILL.w / 2, y: p.y - PILL.h / 2, width: PILL.w, height: PILL.h, rx: PILL.h / 2 };
   return (
     <g>
       {/* opaque underlay, so the comet passes behind the step rather than through its text */}
       <rect {...box} fill="#06164D" />
-      <rect {...box} fill={STEP_SKIN.fill} stroke={STEP_SKIN.stroke} strokeWidth={2} />
-      <rect ref={glowRef} {...box} fill="rgba(125,244,129,0.10)" stroke={ACCENT} strokeWidth={2.5} opacity={0} filter="url(#aci-comet-glow)" />
+      <rect {...box} fill={WHO_SKIN[who].fill} stroke={WHO_SKIN[who].stroke} strokeWidth={2} />
+      <rect ref={glowRef} {...box} fill="rgba(255,255,255,0.08)" stroke="#FFFFFF" strokeWidth={2.5} opacity={0} filter="url(#aci-comet-glow)" />
       <text x={p.x} y={p.y - 4} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={TEXT}>
         {label}
       </text>
@@ -2254,7 +2259,33 @@ const StepPill = ({ at, label, detail, glowRef }: { at: number; label: string; d
   );
 };
 
-type LoopStep = { label: string; detail: string };
+/** Who does a step: the agent by itself, a human, or both together. */
+type Who = 'agent' | 'human' | 'both';
+type LoopStep = { label: string; detail: string; who: Who };
+
+// Agent = Leuchtblau, human = Leuchtgrün, together = both, blended across the pill.
+const WHO_SKIN: Record<Who, { fill: string; stroke: string }> = {
+  agent: { fill: 'rgba(45,93,255,0.22)', stroke: 'rgba(120,150,255,0.95)' },
+  human: { fill: 'rgba(125,244,129,0.16)', stroke: 'rgba(125,244,129,0.95)' },
+  both: { fill: 'url(#aci-both-fill)', stroke: 'url(#aci-both-stroke)' },
+};
+
+/** The three kinds, as a small key; same pill shapes as the steps. */
+const WhoKey = ({ who, label }: { who: Who; label: string }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+    <svg width={44} height={24} viewBox="0 0 44 24" aria-hidden="true">
+      <defs>
+        <linearGradient id={`aci-key-${who}`} x1="0" x2="1">
+          <stop offset="0%" stopColor="rgba(120,150,255,0.95)" />
+          <stop offset="100%" stopColor="rgba(125,244,129,0.95)" />
+        </linearGradient>
+      </defs>
+      <rect x={1.5} y={1.5} width={41} height={21} rx={10.5} fill={who === 'both' ? 'rgba(85,170,190,0.18)' : WHO_SKIN[who].fill}
+        stroke={who === 'both' ? `url(#aci-key-${who})` : WHO_SKIN[who].stroke} strokeWidth={2} />
+    </svg>
+    <span style={{ fontSize: 26, color: MUTED }}>{label}</span>
+  </div>
+);
 
 /**
  * A comet runs the ring clockwise, one lap per `LAP_MS`, a fading trail behind it; each step
@@ -2313,6 +2344,14 @@ const Loop = ({ title, sub, steps }: { title: string; sub?: string; steps: [Loop
         <marker id="aci-loop-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
           <path d="M 0 0 L 10 5 L 0 10 z" fill={MUTED} />
         </marker>
+        <linearGradient id="aci-both-stroke" x1="0" x2="1">
+          <stop offset="0%" stopColor="rgba(120,150,255,0.95)" />
+          <stop offset="100%" stopColor="rgba(125,244,129,0.95)" />
+        </linearGradient>
+        <linearGradient id="aci-both-fill" x1="0" x2="1">
+          <stop offset="0%" stopColor="rgba(45,93,255,0.22)" />
+          <stop offset="100%" stopColor="rgba(125,244,129,0.16)" />
+        </linearGradient>
         <filter id="aci-comet-glow" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="6" result="b" />
           <feMerge>
@@ -2367,7 +2406,15 @@ const LoopPage = ({ name, first, handoff, second }: { name: string; first: React
     <SkillH name={name} suffix="Workflow" />
     <div className="aci-loops" style={{ marginTop: 40, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
       <Steps>
-        <Step duration={320}>{first}</Step>
+        <Step duration={320}>
+          {first}
+          {/* the key arrives with the first loop, bottom left of the page */}
+          <div style={{ position: 'absolute', left: 0, bottom: 0, display: 'flex', gap: 40 }}>
+            <WhoKey who="agent" label="agent" />
+            <WhoKey who="both" label="together" />
+            <WhoKey who="human" label="human" />
+          </div>
+        </Step>
         <Step duration={320}>
           <div style={{ display: 'flex', alignItems: 'flex-start' }}>
             <Handoff label={handoff} />
@@ -2386,9 +2433,9 @@ const ReviewMrLoop: Page = () => (
       <Loop
         title="Topic collection"
         steps={[
-          { label: 'curate', detail: 'keep · drop · merge' },
-          { label: 'draft', detail: 'the comment' },
-          { label: 'post', detail: 'on your press' },
+          { label: 'curate', detail: 'keep · drop · merge', who: 'both' },
+          { label: 'draft', detail: 'the comment', who: 'both' },
+          { label: 'post', detail: 'by hand only', who: 'human' },
         ]}
       />
     }
@@ -2397,9 +2444,9 @@ const ReviewMrLoop: Page = () => (
       <Loop
         title="Validate responses"
         steps={[
-          { label: 'news', detail: 'replies · pushes' },
-          { label: 'judge', detail: 'settled · more · wait' },
-          { label: 'you decide', detail: 'ack · follow up' },
+          { label: 'news', detail: 'replies · pushes', who: 'agent' },
+          { label: 'judge', detail: 'settled · more · wait', who: 'agent' },
+          { label: 'react', detail: 'ack · follow up', who: 'human' },
         ]}
       />
     }
@@ -2413,9 +2460,9 @@ const ReworkMrLoop: Page = () => (
       <Loop
         title="Plan phase"
         steps={[
-          { label: 'thread', detail: 'what is asked' },
-          { label: 'propose', detail: 'fix · reply · push back' },
-          { label: 'agree', detail: 'on your press' },
+          { label: 'thread', detail: 'what is asked', who: 'agent' },
+          { label: 'propose', detail: 'fix · reply · push back', who: 'both' },
+          { label: 'agree', detail: 'the plan, by hand', who: 'human' },
         ]}
       />
     }
@@ -2424,9 +2471,9 @@ const ReworkMrLoop: Page = () => (
       <Loop
         title="Fix phase"
         steps={[
-          { label: 'fix', detail: 'built to the plan' },
-          { label: 'review', detail: 'the diff in hunk' },
-          { label: 'push', detail: 'and reply' },
+          { label: 'fix', detail: 'built to the plan', who: 'agent' },
+          { label: 'review', detail: 'the diff in hunk', who: 'both' },
+          { label: 'push', detail: 'and reply, by hand', who: 'human' },
         ]}
       />
     }
@@ -2457,8 +2504,8 @@ const TechBody = ({ stepped, mark }: { stepped: boolean; mark: MarkMode }) => {
   const tiles = [
     <Tile key="skill" tag="SKILL.md + scripts/" title="Workflow in prose, state in Python" text="glab for GitLab, per-MR state survives sessions" />,
     <Tile key="mod" tag="review-ui mod" title="Cards, buttons, sidebar" text="a press runs the script directly, no model turn" />,
-    <Tile key="hunk" tag="hunk + tmux" title="Diffs in a real diff viewer" text="your line notes go back to the agent" />,
-    <Tile key="press" tag="one-time press token" title="Only you post, push, resolve" text="the mod blocks the model's own attempts" />,
+    <Tile key="hunk" tag="hunk + tmux" title="Diffs in a real diff viewer" text="line notes go back to the agent" />,
+    <Tile key="press" tag="one-time press token" title="Only humans post, push, resolve" text="the mod blocks the model's own attempts" />,
   ];
   return (
     <Shell mark={mark}>
@@ -2594,7 +2641,7 @@ const Outro: Page = () => {
   const active = useIsActivePage();
   const [arriving] = useState(() => active && shownMode === 'none');
   return (
-  <Shell mark="none">
+  <Shell mark="none" center>
     <style>{OUTRO_CSS}</style>
     <div
       className={arriving ? 'aci-outro-in' : undefined}
