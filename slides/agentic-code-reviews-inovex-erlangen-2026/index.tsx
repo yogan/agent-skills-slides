@@ -2595,9 +2595,9 @@ const Handoff = ({ label }: { label: string }) => (
 /** The key to who does a step, centred below the first loop. */
 const WhoLegend = () => (
   <div className="aci-key" style={{ position: 'absolute', left: RING_W / 2, bottom: 0, transform: 'translateX(-50%)', display: 'flex', gap: 40 }}>
-    <WhoKey who="agent" label="agent" i={0} />
+    <WhoKey who="human" label="human" i={0} />
     <WhoKey who="both" label="together" i={1} />
-    <WhoKey who="human" label="human" i={2} />
+    <WhoKey who="agent" label="agent" i={2} />
   </div>
 );
 
