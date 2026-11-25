@@ -2259,14 +2259,14 @@ type LoopStep = { label: string; detail: string };
 /**
  * A comet runs the ring clockwise, one lap per `LAP_MS`, a fading trail behind it; each step
  * lights up as it passes. Behind the pills, so it seems to go through each step. Runs only on
- * the page the audience sees and only once the loop is revealed; thumbnails show the ring at
- * rest. `phase` offsets the second loop so the two never move in lockstep.
+ * the page the audience sees, on the current loop (the last revealed), always starting from the
+ * top step, the loop's entry point; thumbnails show the ring at rest.
  */
 const LAP_MS = 5200;
 const TRAIL = 48;
 const TRAIL_STEP = 0.9; // degrees between trail dots
 
-const Loop = ({ title, sub, steps, phase = 0 }: { title: string; sub?: string; steps: [LoopStep, LoopStep, LoopStep]; phase?: number }) => {
+const Loop = ({ title, sub, steps }: { title: string; sub?: string; steps: [LoopStep, LoopStep, LoopStep] }) => {
   const active = useIsActivePage();
   const svg = useRef<SVGSVGElement | null>(null);
   const comet = useRef<SVGGElement | null>(null);
@@ -2274,7 +2274,7 @@ const Loop = ({ title, sub, steps, phase = 0 }: { title: string; sub?: string; s
   useEffect(() => {
     if (!active || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     let raf = 0;
-    const t0 = performance.now();
+    let t0 = -1; // set when the loop becomes current, so every lap starts at the top step
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       // Only the current loop runs: the last one revealed on its page.
@@ -2283,8 +2283,12 @@ const Loop = ({ title, sub, steps, phase = 0 }: { title: string; sub?: string; s
       const shown = !!own && !!revealed?.length && revealed[revealed.length - 1] === own;
       if (!shown) glows.current.forEach((g) => g?.setAttribute('opacity', '0'));
       if (comet.current) comet.current.style.opacity = shown ? '1' : '0';
-      if (!shown) return;
-      const head = -90 + (((now - t0) / LAP_MS + phase) % 1) * 360;
+      if (!shown) {
+        t0 = -1;
+        return;
+      }
+      if (t0 < 0) t0 = now;
+      const head = -90 + (((now - t0) / LAP_MS) % 1) * 360;
       const dots = comet.current?.children;
       if (dots)
         for (let i = 0; i < dots.length; i++) {
@@ -2302,7 +2306,7 @@ const Loop = ({ title, sub, steps, phase = 0 }: { title: string; sub?: string; s
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [active, phase]);
+  }, [active]);
   return (
     <svg ref={svg} className="aci-loop" width={RING_W} height={RING_H} viewBox={`0 0 ${RING_W} ${RING_H}`} style={{ display: 'block', overflow: 'visible' }}>
       <defs>
@@ -2392,7 +2396,6 @@ const ReviewMrLoop: Page = () => (
     second={
       <Loop
         title="Validate responses"
-        phase={0.5}
         steps={[
           { label: 'news', detail: 'replies · pushes' },
           { label: 'judge', detail: 'settled · more · wait' },
@@ -2420,9 +2423,8 @@ const ReworkMrLoop: Page = () => (
     second={
       <Loop
         title="Fix phase"
-        phase={0.5}
         steps={[
-          { label: 'fix', detail: 'checks pass' },
+          { label: 'fix', detail: 'built to the plan' },
           { label: 'review', detail: 'the diff in hunk' },
           { label: 'push', detail: 'and reply' },
         ]}
