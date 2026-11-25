@@ -2318,11 +2318,15 @@ const gapAt = (deg: number) => (deg === -90 ? ARC_GAP.top : ARC_GAP.side);
  * second the time the hand-off takes: its arrow draws, its label types itself, then the ring
  * fades in, its arcs draw, and only then the comet starts (`COMET_DELAY`). The key arrives last.
  * Delays live on the revealed state only, so stepping back hides everything at once.
+ * `will-change` keeps each ring on its own layer for good: otherwise Chrome drops the layer when
+ * the transition ends and re-rasters the text snapped to the pixel grid, a visible 1px jump.
+ * Once the second loop is up, the first dims so the new one has the focus.
  */
 const HANDOFF_MS = 1100;
 const COMET_DELAY = 1500;
 const LOOP_CSS = `
-.aci-loops [data-osd-step] .aci-loop { transform-origin: 50% 55%; transition: opacity 800ms ease-out, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1); }
+.aci-loops [data-osd-step] .aci-loop { will-change: opacity, transform; transform-origin: 50% 55%; transition: opacity 800ms ease-out, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1); }
+.aci-loops [data-osd-step]:has(~ [data-osd-step='revealed']) .aci-loop { opacity: 0.45; }
 .aci-loops [data-osd-step='pending'] .aci-loop { opacity: 0; transform: scale(0.94); transition: none; }
 .aci-loops [data-osd-step='revealed'] .aci-loop { transition-delay: var(--d, 0ms); }
 .aci-loop .aci-arc { transition: stroke-dashoffset 800ms cubic-bezier(0.4, 0, 0.2, 1); }
@@ -2366,7 +2370,8 @@ const Arc = ({ from, to }: { from: number; to: number }) => {
  * loop writes the opacity straight to the DOM, so the page never re-renders per frame.
  */
 const StepPill = ({ at, label, detail, who, glowRef }: LoopStep & { at: number; glowRef?: (el: SVGRectElement | null) => void }) => {
-  const p = onRing(at);
+  const ring = onRing(at);
+  const p = { x: Math.round(ring.x), y: Math.round(ring.y) };
   const box = { x: p.x - PILL.w / 2, y: p.y - PILL.h / 2, width: PILL.w, height: PILL.h, rx: PILL.h / 2 };
   return (
     <g>

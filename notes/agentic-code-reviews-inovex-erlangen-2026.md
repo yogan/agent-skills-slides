@@ -17,6 +17,7 @@ to the artwork (the slidev master's version looks squished).
 - On the workflow pages a comet runs the current loop (the last one revealed) and lights the
   steps it passes; revealing the second sends one spark along the arrow. Only on the page
   being presented.
+- Once the second loop is up, the first dims, so the new one has the focus.
 - The contact lines on the close are links and re-scramble on hover.
 
 ## Why it is built this way
