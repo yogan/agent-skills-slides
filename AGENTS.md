@@ -9,6 +9,7 @@ You are authoring **slides** in this repo. Every slide is arbitrary React code t
 - Put slide-specific images/videos/fonts under `slides/<id>/assets/`. For assets reused across decks or themes (logos, avatars), use the global `assets/` folder and import via `@assets/...`.
 - Do **not** touch `package.json`, `open-slide.config.ts`, or other slides.
 - Do not add dependencies. Use only `react` and standard web APIs.
+- Copying a small third-party component into a slide's `index.tsx` is fine if its licence allows it: keep its licence notice above the code and add a line to `assets/CREDITS.md`.
 
 ## Which skill to use
 
@@ -17,6 +18,14 @@ You are authoring **slides** in this repo. Every slide is arbitrary React code t
 - **Creating or extracting a theme** — use the `create-theme` skill. Themes live as markdown under `themes/<id>.md` and are read by `create-slide` before authoring.
 - **Resolving "this page" / "this element"** — when the user references the current slide or selection without naming it, consult the `current-slide` skill. It reads the dev server's `node_modules/.open-slide/current.json` to find which slide, page, and inspector-picked element they mean.
 - **Any other slide edit** — read the `slide-authoring` skill before writing. It is the technical reference for everything inside `slides/<id>/`: file contract, the 1920×1080 canvas, type scale, palette, layout, assets, self-review checklist, and anti-patterns. `create-slide` and `apply-comments` both defer to it for the *how*.
+
+## This repo
+
+- Each deck has notes in `notes/<deck-id>.md`: what the code does not say — why things are built as they are, and how the deck
+  behaves when presented. **Read it before editing a deck**, and keep it current when a change
+  makes it wrong. Leave out anything the code already shows.
+- `README.md` covers presenting and checking pages; `assets/CREDITS.md` the sources and
+  licences of committed assets — add a line when you commit a new one.
 
 Keep this file short: hard rules only. All deeper guidance lives in the skills above.
 
