@@ -36,6 +36,11 @@ to the artwork (the slidev master's version looks squished).
 - **The rays are drawn above the mark**, `mix-blend-mode: screen`, so a beam lights the mark
   where it crosses it. On bright pages they tilt down onto the mark (`tilt`, eased in
   `raysShared`). A fake sheen on the mark was tried and dropped: it did not match the rays.
+- **The gloss on the colour mark is the rays' own frame**: SideRays copies the mark's corner
+  of each frame into `raysShared.gloss`, a 2D canvas masked to the mark and colour-dodged over
+  it (`Gloss`), so the shine sits exactly under the beams. A second WebGL instance would have
+  double-eased the shared state. Bright pages also lower `falloff` (eased) so the beams reach
+  the corner at all. The gloss fades out with the mark.
 - **Side Rays** needs WebGL2; without it, and on inactive pages, the static corner glow stands
   in. Its GLSL uses `clamp`: the port renames the JS helper, and must not touch the shader.
 

@@ -110,16 +110,18 @@ const P_SKY = 'm67.45005,17.00878h0l3.26985,12.20317.13675.09647,16.8036-4.55691
 const P_BLUE = 'm70.7199,29.21194l-12.12441,3.24874-.07877.02111-.19157.10191,4.55691,16.8036.19153.10096c.42641-.02153.84699-.18881,1.17265-.51447l22.96563-22.96566c.3718-.3718.53908-.86633.51447-1.35311l-17.00643,4.55692h0Z';
 const P_TEAL = 'm38.24043,24.83554c.02153.42641.18876.84693.51441,1.17259l22.96569,22.96566c.3718.3718.86633.53908,1.35305.51447l-7.82672-29.20963-17.00643,4.55692Z';
 
+const markMotion = (active: boolean, mode: MarkMode) => {
+  if (!active) return '';
+  if (mode === 'none' && shownMode === 'faint') return 'aci-to-none';
+  if (mode === 'faint' && shownMode === 'none') return 'aci-from-none';
+  if (mode === 'faint' && shownMode === 'brand') return 'aci-to-faint';
+  if (mode === 'brand' && shownMode === 'faint') return 'aci-to-brand';
+  return '';
+};
+
 const Mark = ({ mode }: { mode: MarkMode }) => {
   const active = useIsActivePage();
-  const [motion] = useState(() => {
-    if (!active) return '';
-    if (mode === 'none' && shownMode === 'faint') return 'aci-to-none';
-    if (mode === 'faint' && shownMode === 'none') return 'aci-from-none';
-    if (mode === 'faint' && shownMode === 'brand') return 'aci-to-faint';
-    if (mode === 'brand' && shownMode === 'faint') return 'aci-to-brand';
-    return '';
-  });
+  const [motion] = useState(() => markMotion(active, mode));
   useLayoutEffect(() => {
     if (active) shownMode = mode;
   }, [active, mode]);
@@ -178,6 +180,64 @@ const Mark = ({ mode }: { mode: MarkMode }) => {
   );
 };
 
+const MARK_MASK = `url("data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 49.49 49.49'><g transform='translate(-38.24 0)' fill='#fff'>${[P_GREEN, P_SKY, P_BLUE, P_TEAL].map(d => `<path d='${d}'/>`).join('')}</g></svg>`
+)}")`;
+const GLOSS_CSS = `
+.aci-gloss { opacity: 0; }
+.aci-gloss.aci-brand { opacity: 0.8; }
+.aci-gloss.aci-to-faint { animation: aci-gloss-out 1000ms ease-in-out both; }
+.aci-gloss.aci-to-brand { animation: aci-gloss-out 1000ms ease-in-out reverse both; }
+@keyframes aci-gloss-out { from { opacity: 0.8; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .aci-gloss { animation: none !important; } }
+`;
+
+/**
+ * The gloss on the colour mark: the rays' own frame (copied by SideRays each frame), clipped to
+ * the mark and colour-dodged onto it, so the mark shines exactly where a beam falls, and moves
+ * with the beams. Fades with the mark; only on the active page with WebGL2.
+ */
+const Gloss = ({ mode }: { mode: MarkMode }) => {
+  const active = useIsActivePage();
+  const [motion] = useState(() => markMotion(active, mode));
+  const ref = useRef<HTMLCanvasElement>(null);
+  useLayoutEffect(() => {
+    if (!active) return;
+    raysShared.gloss = ref.current;
+    return () => {
+      if (raysShared.gloss === ref.current) raysShared.gloss = null;
+    };
+  }, [active]);
+  if (!active || !hasWebgl2() || (mode !== 'brand' && motion !== 'aci-to-faint')) return null;
+  return (
+    <div
+      aria-hidden="true"
+      className={`aci-gloss aci-${mode} ${motion}`}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        mixBlendMode: 'color-dodge',
+        maskImage: MARK_MASK,
+        WebkitMaskImage: MARK_MASK,
+        maskSize: '860px 860px',
+        WebkitMaskSize: '860px 860px',
+        maskPosition: 'right -260px bottom -300px',
+        WebkitMaskPosition: 'right -260px bottom -300px',
+        maskRepeat: 'no-repeat',
+        WebkitMaskRepeat: 'no-repeat',
+      }}
+    >
+      <style>{GLOSS_CSS}</style>
+      <canvas
+        ref={ref}
+        style={{ position: 'absolute', left: `${GLOSS_X * 100}%`, top: `${GLOSS_Y * 100}%`, right: 0, bottom: 0, width: `${(1 - GLOSS_X) * 100}%`, height: `${(1 - GLOSS_Y) * 100}%` }}
+      />
+    </div>
+  );
+};
+
 /**
  * `center` for the title and the close. Content pages hang from a fixed top instead, so their
  * headings sit at the same height on every page and do not jump on a page change.
@@ -203,6 +263,7 @@ const Shell = ({ children, mark = 'faint', center, bright = mark === 'brand' }: 
         real light would; over the plain background screen looks like the rays alone. */}
     <Mark mode={mark} />
     <Rays bright={bright} />
+    <Gloss mode={mark} />
     <div
       style={{
         position: 'relative',
@@ -1329,7 +1390,10 @@ const TechText = ({
 // MIT + Commons Clause License Condition v1.0 — Copyright (c) 2026 David Haz. Same terms as the
 // TechText notice above: used as part of this deck, not redistributed on its own.
 /* eslint-disable */
-const raysShared = { time: Math.random() * 100, revealed: false, level: -1, tilt: NaN };
+const raysShared = { time: Math.random() * 100, revealed: false, level: -1, tilt: NaN, falloff: NaN, gloss: null as HTMLCanvasElement | null };
+// The part of the canvas the gloss copies (the visible mark, bottom right), as fractions.
+const GLOSS_X = 1320 / 1920;
+const GLOSS_Y = 480 / 1080;
 
 const RAYS_PIXEL_BUDGET = 2.4e6;
 const RAYS_TAU = Math.PI * 2;
@@ -1700,7 +1764,10 @@ const SideRays = ({
       gl.uniform1f(u.uSpread, s.spread);
       gl.uniform1f(u.uDensity, s.density);
       gl.uniform1f(u.uSharpness, s.sharpness);
-      gl.uniform1f(u.uFalloff, s.falloff);
+      // Deck addition: the reach eases too, so the light reaches the mark only on bright pages.
+      if (Number.isNaN(raysShared.falloff)) raysShared.falloff = s.falloff;
+      raysShared.falloff += (s.falloff - raysShared.falloff) * (1 - Math.exp(-dt * 1.2));
+      gl.uniform1f(u.uFalloff, raysShared.falloff);
       gl.uniform1f(u.uGlow, s.glow);
       gl.uniform1f(u.uSaturation, s.saturation);
       gl.uniform1f(u.uDust, s.dust);
@@ -1715,12 +1782,29 @@ const SideRays = ({
       gl.uniform3f(u.uFocus, focus.angle, Math.max(0.06, s.spread * 0.25), focus.strength * 1.4);
       gl.uniform1f(u.uSway, reduced ? 0 : 1);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
+      // Deck addition: copy the mark's corner of this frame to the gloss layer (see `Gloss`).
+      const gloss = raysShared.gloss;
+      if (gloss?.isConnected) {
+        const sx = Math.floor(canvas.width * GLOSS_X);
+        const sy = Math.floor(canvas.height * GLOSS_Y);
+        const w = canvas.width - sx;
+        const h = canvas.height - sy;
+        if (gloss.width !== w || gloss.height !== h) {
+          gloss.width = w;
+          gloss.height = h;
+        }
+        const g2 = gloss.getContext('2d');
+        if (g2) {
+          g2.clearRect(0, 0, w, h);
+          g2.drawImage(canvas, sx, sy, w, h, 0, 0, w, h);
+        }
+      }
 
       const settling =
         Math.abs(target - aim.value) > 1e-4 ||
         Math.abs(aim.velocity) > 1e-4 ||
         Math.abs(focusTarget - focus.strength) > 1e-3;
-      const busy = (s.speed > 0 && !reduced) || reveal < 1 || settling || Math.abs(s.intensity - raysShared.level) > 1e-3 || Math.abs(s.tilt - raysShared.tilt) > 1e-3;
+      const busy = (s.speed > 0 && !reduced) || reveal < 1 || settling || Math.abs(s.intensity - raysShared.level) > 1e-3 || Math.abs(s.tilt - raysShared.tilt) > 1e-3 || Math.abs(s.falloff - raysShared.falloff) > 1e-3;
       if (busy && visible && pageVisible) raf = requestAnimationFrame(frame);
     };
 
@@ -1840,6 +1924,7 @@ const Rays = ({ bright }: { bright: boolean }) => {
         intensity={bright ? 2.4 : 0.85}
         origin="top-right"
         tilt={bright ? 22 : 0}
+        falloff={bright ? 0.9 : 1.6}
         followMouse
         mouseInfluence={0.25}
       />
