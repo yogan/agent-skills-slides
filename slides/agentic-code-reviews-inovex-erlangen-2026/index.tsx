@@ -2126,16 +2126,16 @@ const ReviewMr: Page = () => (
           <Row label="explainer" note="a blog-style article for context" aside="/explain-branch" />
         </Step>
         <Step duration={320}>
-          <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
-        </Step>
-        <Step duration={320}>
           <Row label="human review" note="yours and other reviewers' threads" aside="synced in as topics" />
         </Step>
         <Step duration={320}>
-          <Row label="drafting" note="one draft per topic" aside="posted on your press" />
+          <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
         </Step>
         <Step duration={320}>
-          <Row label="follow-up" note="replies and pushes, over days" aside="agent judges · you ack" />
+          <Row label="drafting" note="each topic worded as a comment" aside="posted on your press" />
+        </Step>
+        <Step duration={320}>
+          <Row label="follow-up" note="replies and pushes" aside="agent judges · you ack" />
         </Step>
       </RevealList>
     </Stage>
