@@ -2324,12 +2324,19 @@ const gapAt = (deg: number) => (deg === -90 ? ARC_GAP.top : ARC_GAP.side);
  */
 const HANDOFF_MS = 1100;
 const COMET_DELAY = 1500;
+const WHO_STAGGER = 350; // the who-tabs, then the key's entries, one after the other
 const LOOP_CSS = `
 .aci-loops [data-osd-step] .aci-loop { will-change: opacity, transform; transform-origin: 50% 55%; transition: opacity 800ms ease-out, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1); }
 .aci-loops [data-osd-step]:has(~ [data-osd-step='revealed'] .aci-loop) .aci-loop { opacity: 0.45; }
-.aci-tab { transition: opacity 500ms ease-out; }
+.aci-tab { transition: opacity 450ms ease-out; }
+.aci-pill-text { transform: translateY(6px); transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
+.aci-tab, .aci-pill-text { transition-delay: calc(var(--i) * ${WHO_STAGGER}ms); }
 .aci-loops:has([data-osd-step='pending'] > .aci-who-intro) .aci-tab { opacity: 0; transition: none; }
-.aci-loops [data-osd-step='revealed'] > .aci-who-intro .aci-key { transition-delay: 250ms; }
+.aci-loops:has([data-osd-step='pending'] > .aci-who-intro) .aci-pill-text { transform: none; transition: none; }
+.aci-loops [data-osd-step] > .aci-who-intro .aci-key { transition: none; }
+.aci-key > * { transition: opacity 450ms ease-out; }
+.aci-loops [data-osd-step='pending'] > .aci-who-intro .aci-key > * { opacity: 0; transition: none; }
+.aci-loops [data-osd-step='revealed'] > .aci-who-intro .aci-key > * { transition-delay: calc(${3 * WHO_STAGGER}ms + var(--i) * ${WHO_STAGGER}ms); }
 .aci-loops [data-osd-step='pending'] .aci-loop { opacity: 0; transform: scale(0.94); transition: none; }
 .aci-loops [data-osd-step='revealed'] .aci-loop { transition-delay: var(--d, 0ms); }
 .aci-loop .aci-arc { transition: stroke-dashoffset 800ms cubic-bezier(0.4, 0, 0.2, 1); }
@@ -2372,22 +2379,25 @@ const Arc = ({ from, to }: { from: number; to: number }) => {
  * A step on the ring. Its glow ring (`aci-glow`) is lit by the comet as it passes; the comet's
  * loop writes the opacity straight to the DOM, so the page never re-renders per frame.
  */
-const StepPill = ({ at, label, detail, who, glowRef }: LoopStep & { at: number; glowRef?: (el: SVGRectElement | null) => void }) => {
+const StepPill = ({ at, order, label, detail, who, glowRef }: LoopStep & { at: number; order: number; glowRef?: (el: SVGRectElement | null) => void }) => {
   const ring = onRing(at);
   const p = { x: Math.round(ring.x), y: Math.round(ring.y) };
   const box = { x: p.x - PILL.w / 2, y: p.y - PILL.h / 2, width: PILL.w, height: PILL.h, rx: PILL.h / 2 };
   return (
-    <g>
+    <g style={{ ['--i' as string]: order }}>
       {/* opaque underlay, so the comet passes behind the step rather than through its text */}
       <rect {...box} fill="#06164D" />
       <rect {...box} fill={WHO_SKIN[who].fill} stroke={WHO_SKIN[who].stroke} strokeWidth={2} />
       <rect ref={glowRef} {...box} fill="rgba(255,255,255,0.08)" stroke="#FFFFFF" strokeWidth={2.5} opacity={0} filter="url(#aci-comet-glow)" />
-      <text x={p.x} y={p.y + 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={TEXT}>
-        {label}
-      </text>
-      <text x={p.x} y={p.y + 34} textAnchor="middle" fontFamily={SANS} fontSize={23} fill={MUTED}>
-        {detail}
-      </text>
+      {/* centred in the pill; moves down a little to make room when the tab arrives */}
+      <g className="aci-pill-text">
+        <text x={p.x} y={p.y - 4} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={TEXT}>
+          {label}
+        </text>
+        <text x={p.x} y={p.y + 30} textAnchor="middle" fontFamily={SANS} fontSize={23} fill={MUTED}>
+          {detail}
+        </text>
+      </g>
       <WhoTab who={who} x={p.x} y={box.y} />
     </g>
   );
@@ -2449,8 +2459,8 @@ const WhoTab = ({ who, x, y }: { who: Who; x: number; y: number }) => {
 };
 
 /** The three kinds, as a small key; same pill shapes as the steps. */
-const WhoKey = ({ who, label }: { who: Who; label: string }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+const WhoKey = ({ who, label, i }: { who: Who; label: string; i: number }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 14, ['--i' as string]: i }}>
     <svg width={68} height={34} viewBox="0 0 68 34" aria-hidden="true">
       <defs>
         <linearGradient id={`aci-key-${who}`} x1="0" x2="1">
@@ -2564,9 +2574,9 @@ const Loop = ({ title, sub, steps, second }: { title: string; sub?: string; step
           {sub}
         </text>
       ) : null}
-      <StepPill at={ANGLES[0]} {...steps[0]} glowRef={(el) => (glows.current[0] = el)} />
-      <StepPill at={ANGLES[1]} {...steps[1]} glowRef={(el) => (glows.current[1] = el)} />
-      <StepPill at={ANGLES[2]} {...steps[2]} glowRef={(el) => (glows.current[2] = el)} />
+      <StepPill at={ANGLES[0]} order={0} {...steps[0]} glowRef={(el) => (glows.current[0] = el)} />
+      <StepPill at={ANGLES[1]} order={1} {...steps[1]} glowRef={(el) => (glows.current[1] = el)} />
+      <StepPill at={ANGLES[2]} order={2} {...steps[2]} glowRef={(el) => (glows.current[2] = el)} />
     </svg>
   );
 };
@@ -2582,12 +2592,12 @@ const Handoff = ({ label }: { label: string }) => (
   </div>
 );
 
-/** The key to who does a step, bottom left of the page. */
+/** The key to who does a step, centred below the first loop. */
 const WhoLegend = () => (
-  <div className="aci-key" style={{ position: 'absolute', left: 0, bottom: 0, display: 'flex', gap: 40 }}>
-    <WhoKey who="agent" label="agent" />
-    <WhoKey who="both" label="together" />
-    <WhoKey who="human" label="human" />
+  <div className="aci-key" style={{ position: 'absolute', left: RING_W / 2, bottom: 0, transform: 'translateX(-50%)', display: 'flex', gap: 40 }}>
+    <WhoKey who="agent" label="agent" i={0} />
+    <WhoKey who="both" label="together" i={1} />
+    <WhoKey who="human" label="human" i={2} />
   </div>
 );
 
