@@ -2446,7 +2446,7 @@ const Contact = ({ icon, href, children }: { icon: string; href: string; childre
 
 /**
  * The close arrives on an empty canvas (the watermark just faded out on the transit page). The
- * block fades in, and the lines you could type, the commands and the contacts, decrypt left to
+ * block fades in, and the two contact lines decrypt left to
  * right as it does: a short run of random glyphs runs ahead of the settled text. Mono only, so
  * no line changes width while it scrambles; the unrevealed rest is held in place, invisible.
  * Only when arrived at from that transit page; thumbnails and jumps show it settled.
@@ -2531,11 +2531,8 @@ const Outro: Page = () => {
     >
       <H>Agentic Code Reviews</H>
       <div style={{ marginTop: 26, fontFamily: MONO, fontSize: 36, lineHeight: 1.2, letterSpacing: '0.02em' }}>
-        <DecryptLine
-          live={arriving}
-          delay={250}
-          segs={[{ text: '/', accent: true }, { text: 'review-mr ' }, { text: '&&', dim: true }, { text: ' ' }, { text: '/', accent: true }, { text: 'rework-mr' }]}
-        />
+        <Hat>/</Hat>review-mr<span style={{ color: DIM, margin: '0 18px' }}>&amp;&amp;</span>
+        <Hat>/</Hat>rework-mr
       </div>
 
       <div
@@ -2557,12 +2554,12 @@ const Outro: Page = () => {
                 style={{ display: 'flex', flexDirection: 'column', gap: 26, textAlign: 'left' }}
               >
                 <Contact icon={iconGithub} href="https://github.com/yogan/agent-skills">
-                  <DecryptLine live={arriving} delay={650} segs={[{ text: 'github.com/yogan/' }, { text: 'agent-skills', accent: true }]} />
+                  <DecryptLine live={arriving} delay={300} segs={[{ text: 'github.com/yogan/' }, { text: 'agent-skills', accent: true }]} />
                 </Contact>
                 <Contact icon={iconMail} href="mailto:frank.blendinger@inovex.de">
                   <DecryptLine
                     live={arriving}
-                    delay={950}
+                    delay={600}
                     segs={[{ text: 'frank.blendinger' }, { text: '@', accent: true }, { text: 'inovex.de' }]}
                   />
                 </Contact>
