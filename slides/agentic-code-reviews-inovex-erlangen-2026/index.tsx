@@ -183,7 +183,8 @@ const Mark = ({ mode }: { mode: MarkMode }) => {
  * headings sit at the same height on every page and do not jump on a page change.
  */
 const CONTENT_TOP = 180;
-const Shell = ({ children, mark = 'faint', center }: { children: ReactNode; mark?: MarkMode; center?: boolean }) => (
+// `bright`: the rays at full strength; on the title (with the colour mark) and on the close.
+const Shell = ({ children, mark = 'faint', center, bright = mark === 'brand' }: { children: ReactNode; mark?: MarkMode; center?: boolean; bright?: boolean }) => (
   <div
     style={{
       width: '100%',
@@ -198,7 +199,7 @@ const Shell = ({ children, mark = 'faint', center }: { children: ReactNode; mark
       overflow: 'hidden',
     }}
   >
-    <Rays bright={mark !== 'faint'} />
+    <Rays bright={bright} />
     <Mark mode={mark} />
     <div
       style={{
@@ -2641,7 +2642,7 @@ const Outro: Page = () => {
   const active = useIsActivePage();
   const [arriving] = useState(() => active && shownMode === 'none');
   return (
-  <Shell mark="none" center>
+  <Shell mark="none" center bright>
     <style>{OUTRO_CSS}</style>
     <div
       className={arriving ? 'aci-outro-in' : undefined}
