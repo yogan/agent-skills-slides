@@ -33,6 +33,9 @@ to the artwork (the slidev master's version looks squished).
 - **Tech Text's labels are drawn one character at a time.** Drawn as whole strings in
   GPU-composited Chrome, the glyphs overlapped whatever the font. Headless Chrome without a GPU
   does not show the bug, so check this on real hardware.
+- **The rays are drawn above the mark**, `mix-blend-mode: screen`, so a beam lights the mark
+  where it crosses it. On bright pages they tilt down onto the mark (`tilt`, eased in
+  `raysShared`). A fake sheen on the mark was tried and dropped: it did not match the rays.
 - **Side Rays** needs WebGL2; without it, and on inactive pages, the static corner glow stands
   in. Its GLSL uses `clamp`: the port renames the JS helper, and must not touch the shader.
 

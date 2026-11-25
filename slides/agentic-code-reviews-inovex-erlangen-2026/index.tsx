@@ -83,13 +83,6 @@ const FAINT_FILTER = 'grayscale(1) brightness(1.6)';
 const MARK_CSS = `
 .aci-mark { opacity: 1; filter: none; }
 .aci-mark.aci-faint { opacity: ${MARK_FAINT}; filter: ${FAINT_FILTER}; }
-.aci-mark .aci-sheen { transition: opacity 1000ms ease-in-out; }
-.aci-mark.aci-faint .aci-sheen, .aci-mark.aci-none .aci-sheen { opacity: 0; }
-.aci-mark .aci-glint { transform-box: view-box; animation: aci-glint 7s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
-@keyframes aci-glint {
-  0% { transform: translate(40px, -40px); }
-  55%, 100% { transform: translate(-40px, 40px); }
-}
 .aci-mark.aci-none { opacity: 0; filter: ${FAINT_FILTER}; }
 .aci-mark.aci-to-faint { animation: aci-to-faint 1000ms ease-in-out both; }
 .aci-mark.aci-to-brand { animation: aci-to-brand 1000ms ease-in-out both; }
@@ -100,7 +93,7 @@ const MARK_CSS = `
 @keyframes aci-to-none { from { opacity: ${MARK_FAINT}; } to { opacity: 0; } }
 @keyframes aci-from-none { from { opacity: 0; } to { opacity: ${MARK_FAINT}; } }
 @media (prefers-reduced-motion: reduce) {
-  .aci-mark, .aci-mark .aci-glint { animation: none !important; }
+  .aci-mark { animation: none !important; }
 }
 `;
 
@@ -172,24 +165,6 @@ const Mark = ({ mode }: { mode: MarkMode }) => {
           <stop offset=".96877" stopColor="#241f9c" />
         </linearGradient>
       </defs>
-      <defs>
-        <clipPath id={g('clip')}>
-          <path d={P_GREEN} />
-          <path d={P_SKY} />
-          <path d={P_BLUE} />
-          <path d={P_TEAL} />
-        </clipPath>
-        <linearGradient id={g('sheen')} x1="1" y1="0" x2="0.35" y2="0.75">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
-          <stop offset="30%" stopColor="#DBE4FF" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#DBE4FF" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id={g('glint')} x1="1" y1="0" x2="0" y2="1">
-          <stop offset="36%" stopColor="#FFFFFF" stopOpacity="0" />
-          <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.7" />
-          <stop offset="64%" stopColor="#FFFFFF" stopOpacity="0" />
-        </linearGradient>
-      </defs>
       {/* Clockwise from the top left. */}
       <g transform="translate(-38.24 0)">
         <g style={{ isolation: 'isolate' }}>
@@ -197,13 +172,6 @@ const Mark = ({ mode }: { mode: MarkMode }) => {
           <Fill d={P_SKY} fill="#31acea" shade={g('sky')} shadeOpacity={0.25} />
           <Fill d={P_BLUE} fill="#424bff" shade={g('blue')} shadeOpacity={0.3} />
           <Fill d={P_TEAL} fill="#28a3a3" shade={g('teal')} shadeOpacity={0.13} />
-        </g>
-        {/* The light from the top-right rays falling on the mark: a sheen on the faces turned
-            towards it, and a glint that slowly sweeps across, both screened over the colours
-            and clipped to the mark. Only in full colour; the watermark is matte. */}
-        <g className="aci-sheen" clipPath={`url(#${g('clip')})`} style={{ mixBlendMode: 'screen' }}>
-          <rect x={38} y={-1} width={52} height={52} fill={`url(#${g('sheen')})`} />
-          <rect className="aci-glint" x={38} y={-1} width={52} height={52} fill={`url(#${g('glint')})`} />
         </g>
       </g>
     </svg>
@@ -231,8 +199,10 @@ const Shell = ({ children, mark = 'faint', center, bright = mark === 'brand' }: 
       overflow: 'hidden',
     }}
   >
-    <Rays bright={bright} />
+    {/* The rays above the mark, screened: where a beam crosses the mark it lights it up, as a
+        real light would; over the plain background screen looks like the rays alone. */}
     <Mark mode={mark} />
+    <Rays bright={bright} />
     <div
       style={{
         position: 'relative',
@@ -1861,7 +1831,7 @@ const Rays = ({ bright }: { bright: boolean }) => {
   const active = useIsActivePage();
   if (!active || !hasWebgl2()) return <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: CORNER_GLOW, zIndex: 0 }} />;
   return (
-    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, mixBlendMode: 'screen' }}>
       <SideRays
         rayColor1="#dbe4ff"
         rayColor2="#7aa2ff"
