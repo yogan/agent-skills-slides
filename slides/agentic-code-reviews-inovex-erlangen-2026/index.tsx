@@ -83,6 +83,13 @@ const FAINT_FILTER = 'grayscale(1) brightness(1.6)';
 const MARK_CSS = `
 .aci-mark { opacity: 1; filter: none; }
 .aci-mark.aci-faint { opacity: ${MARK_FAINT}; filter: ${FAINT_FILTER}; }
+.aci-mark .aci-sheen { transition: opacity 1000ms ease-in-out; }
+.aci-mark.aci-faint .aci-sheen, .aci-mark.aci-none .aci-sheen { opacity: 0; }
+.aci-mark .aci-glint { transform-box: view-box; animation: aci-glint 7s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+@keyframes aci-glint {
+  0% { transform: translate(40px, -40px); }
+  55%, 100% { transform: translate(-40px, 40px); }
+}
 .aci-mark.aci-none { opacity: 0; filter: ${FAINT_FILTER}; }
 .aci-mark.aci-to-faint { animation: aci-to-faint 1000ms ease-in-out both; }
 .aci-mark.aci-to-brand { animation: aci-to-brand 1000ms ease-in-out both; }
@@ -93,7 +100,7 @@ const MARK_CSS = `
 @keyframes aci-to-none { from { opacity: ${MARK_FAINT}; } to { opacity: 0; } }
 @keyframes aci-from-none { from { opacity: 0; } to { opacity: ${MARK_FAINT}; } }
 @media (prefers-reduced-motion: reduce) {
-  .aci-mark { animation: none !important; }
+  .aci-mark, .aci-mark .aci-glint { animation: none !important; }
 }
 `;
 
@@ -165,6 +172,24 @@ const Mark = ({ mode }: { mode: MarkMode }) => {
           <stop offset=".96877" stopColor="#241f9c" />
         </linearGradient>
       </defs>
+      <defs>
+        <clipPath id={g('clip')}>
+          <path d={P_GREEN} />
+          <path d={P_SKY} />
+          <path d={P_BLUE} />
+          <path d={P_TEAL} />
+        </clipPath>
+        <linearGradient id={g('sheen')} x1="1" y1="0" x2="0.35" y2="0.75">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+          <stop offset="30%" stopColor="#DBE4FF" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#DBE4FF" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id={g('glint')} x1="1" y1="0" x2="0" y2="1">
+          <stop offset="36%" stopColor="#FFFFFF" stopOpacity="0" />
+          <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.7" />
+          <stop offset="64%" stopColor="#FFFFFF" stopOpacity="0" />
+        </linearGradient>
+      </defs>
       {/* Clockwise from the top left. */}
       <g transform="translate(-38.24 0)">
         <g style={{ isolation: 'isolate' }}>
@@ -172,6 +197,13 @@ const Mark = ({ mode }: { mode: MarkMode }) => {
           <Fill d={P_SKY} fill="#31acea" shade={g('sky')} shadeOpacity={0.25} />
           <Fill d={P_BLUE} fill="#424bff" shade={g('blue')} shadeOpacity={0.3} />
           <Fill d={P_TEAL} fill="#28a3a3" shade={g('teal')} shadeOpacity={0.13} />
+        </g>
+        {/* The light from the top-right rays falling on the mark: a sheen on the faces turned
+            towards it, and a glint that slowly sweeps across, both screened over the colours
+            and clipped to the mark. Only in full colour; the watermark is matte. */}
+        <g className="aci-sheen" clipPath={`url(#${g('clip')})`} style={{ mixBlendMode: 'screen' }}>
+          <rect x={38} y={-1} width={52} height={52} fill={`url(#${g('sheen')})`} />
+          <rect className="aci-glint" x={38} y={-1} width={52} height={52} fill={`url(#${g('glint')})`} />
         </g>
       </g>
     </svg>
@@ -1327,7 +1359,7 @@ const TechText = ({
 // MIT + Commons Clause License Condition v1.0 — Copyright (c) 2026 David Haz. Same terms as the
 // TechText notice above: used as part of this deck, not redistributed on its own.
 /* eslint-disable */
-const raysShared = { time: Math.random() * 100, revealed: false, level: -1 };
+const raysShared = { time: Math.random() * 100, revealed: false, level: -1, tilt: NaN };
 
 const RAYS_PIXEL_BUDGET = 2.4e6;
 const RAYS_TAU = Math.PI * 2;
@@ -1706,7 +1738,10 @@ const SideRays = ({
       gl.uniform1f(u.uReveal, 1 - Math.pow(1 - reveal, 3));
       gl.uniform1f(u.uLight, s.light ? 1 : 0);
       gl.uniform3f(u.uFrame, s.frame.flipX, s.frame.flipY, s.frame.side);
-      gl.uniform1f(u.uAim, s.tilt + aim.value);
+      // Deck addition: the tilt eases too (shared), so the beam swings rather than jumps.
+      if (Number.isNaN(raysShared.tilt)) raysShared.tilt = s.tilt;
+      raysShared.tilt += (s.tilt - raysShared.tilt) * (1 - Math.exp(-dt * 1.2));
+      gl.uniform1f(u.uAim, raysShared.tilt + aim.value);
       gl.uniform3f(u.uFocus, focus.angle, Math.max(0.06, s.spread * 0.25), focus.strength * 1.4);
       gl.uniform1f(u.uSway, reduced ? 0 : 1);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -1715,7 +1750,7 @@ const SideRays = ({
         Math.abs(target - aim.value) > 1e-4 ||
         Math.abs(aim.velocity) > 1e-4 ||
         Math.abs(focusTarget - focus.strength) > 1e-3;
-      const busy = (s.speed > 0 && !reduced) || reveal < 1 || settling || Math.abs(s.intensity - raysShared.level) > 1e-3;
+      const busy = (s.speed > 0 && !reduced) || reveal < 1 || settling || Math.abs(s.intensity - raysShared.level) > 1e-3 || Math.abs(s.tilt - raysShared.tilt) > 1e-3;
       if (busy && visible && pageVisible) raf = requestAnimationFrame(frame);
     };
 
@@ -1832,8 +1867,9 @@ const Rays = ({ bright }: { bright: boolean }) => {
         rayColor2="#7aa2ff"
         blend={0.7}
         speed={1.5}
-        intensity={bright ? 2.4 : 0.6}
+        intensity={bright ? 2.4 : 0.85}
         origin="top-right"
+        tilt={bright ? 22 : 0}
         followMouse
         mouseInfluence={0.25}
       />
