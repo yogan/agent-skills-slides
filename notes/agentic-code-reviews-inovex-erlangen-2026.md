@@ -21,6 +21,9 @@ to the artwork (the slidev master's version looks squished).
 - On the review-mr workflow the who-tabs and the key take a `→` of their own, after the first
   loop and before the second: the tabs one by one (curate, draft, post), then the key's entries.
   The rework-mr workflow shows them with its first loop.
+- **Demo cues** are reveals of their own on the workflow pages: after the first loop of
+  review-mr (demo 1), after its second (demo 2), after both loops of rework-mr (demo 3). The
+  page blurs back and "Demo Time!" rises in; the next `→` clears it.
 - **Who does a step is a shape as well as a colour** (a tab on the step's top edge: spark for
   the agent, person for the human, both for together), so it survives a washed-out projector
   and colour-blind viewers. Emoji were rejected as too amateurish.
@@ -48,11 +51,15 @@ to the artwork (the slidev master's version looks squished).
   it (`Gloss`), so the shine sits exactly under the beams. A second WebGL instance would have
   double-eased the shared state. Bright pages also lower `falloff` (eased) so the beams reach
   the corner at all. The gloss fades out with the mark.
+- **Demo cue = the latest reveal**: `<Step>`s add up, so `DemoTime` watches the step attributes
+  and shows only while its step is the last revealed one; the other content is blurred by
+  `:has(.aci-demo-on)`. The cue's steps are `display: contents`, so they do not count as flex
+  items between the loops.
 - **Side Rays** needs WebGL2; without it, and on inactive pages, the static corner glow stands
   in. Its GLSL uses `clamp`: the port renames the JS helper, and must not touch the shader.
 
 ## Licences
 
-Tech Text and Side Rays are ports of [React Bits](https://reactbits.dev) components, © David
+Tech Text, Side Rays and Echo Text are ports of [React Bits](https://reactbits.dev) components, © David
 Haz, MIT + Commons Clause: use inside this deck is allowed, redistributing the components on
 their own is not. The notice is kept in `index.tsx` above each port.

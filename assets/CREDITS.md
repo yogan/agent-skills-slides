@@ -16,5 +16,5 @@ Everything is committed; nothing is hotlinked, so the decks run offline.
   paths from the inovex slidev master).
 - Atkinson Hyperlegible and Atkinson Hyperlegible Mono — SIL Open Font License 1.1, Braille
   Institute.
-- Tech Text and Side Rays, in `index.tsx` — ports of React Bits components, © 2026 David Haz,
+- Tech Text, Side Rays and Echo Text, in `index.tsx` — ports of React Bits components, © 2026 David Haz,
   MIT + Commons Clause; the notice is kept above each port.

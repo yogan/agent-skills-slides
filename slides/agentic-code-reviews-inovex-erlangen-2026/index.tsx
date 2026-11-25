@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 import { Step, Steps, useIsActivePage } from '@open-slide/core';
 import goomba from '@assets/goomba.png';
@@ -2326,25 +2326,25 @@ const HANDOFF_MS = 1100;
 const COMET_DELAY = 1500;
 const WHO_STAGGER = 350; // the who-tabs, then the key's entries, one after the other
 const LOOP_CSS = `
-.aci-loops [data-osd-step] .aci-loop { will-change: opacity, transform; transform-origin: 50% 55%; transition: opacity 800ms ease-out, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1); }
+.aci-loops [data-osd-step] .aci-loop { will-change: opacity, transform; transform-origin: 50% 55%; transition: opacity 800ms ease-out, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1), filter 500ms ease-out; }
 .aci-loops [data-osd-step]:has(~ [data-osd-step='revealed'] .aci-loop) .aci-loop { opacity: 0.45; }
 .aci-tab { transition: opacity 450ms ease-out; }
 .aci-pill-text { transform: translateY(6px); transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
 .aci-tab, .aci-pill-text { transition-delay: calc(var(--i) * ${WHO_STAGGER}ms); }
 .aci-loops:has([data-osd-step='pending'] > .aci-who-intro) .aci-tab { opacity: 0; transition: none; }
 .aci-loops:has([data-osd-step='pending'] > .aci-who-intro) .aci-pill-text { transform: none; transition: none; }
-.aci-loops [data-osd-step] > .aci-who-intro .aci-key { transition: none; }
+.aci-loops [data-osd-step] > .aci-who-intro .aci-key { transition: filter 500ms ease-out; }
 .aci-key > * { transition: opacity 450ms ease-out; }
 .aci-loops [data-osd-step='pending'] > .aci-who-intro .aci-key > * { opacity: 0; transition: none; }
 .aci-loops [data-osd-step='revealed'] > .aci-who-intro .aci-key > * { transition-delay: calc(${3 * WHO_STAGGER}ms + var(--i) * ${WHO_STAGGER}ms); }
 .aci-loops [data-osd-step='pending'] .aci-loop { opacity: 0; transform: scale(0.94); transition: none; }
-.aci-loops [data-osd-step='revealed'] .aci-loop { transition-delay: var(--d, 0ms); }
+.aci-loops [data-osd-step='revealed'] .aci-loop { transition-delay: var(--d, 0ms), var(--d, 0ms), 0ms; }
 .aci-loop .aci-arc { transition: stroke-dashoffset 800ms cubic-bezier(0.4, 0, 0.2, 1); }
 .aci-loops [data-osd-step='pending'] .aci-arc { stroke-dashoffset: var(--len); transition: none; }
 .aci-loops [data-osd-step='revealed'] .aci-arc { stroke-dashoffset: 0; transition-delay: calc(var(--d, 0ms) + 450ms); }
-.aci-key { transition: opacity 900ms ease-out; }
+.aci-key { transition: opacity 900ms ease-out, filter 500ms ease-out; }
 .aci-loops [data-osd-step='pending'] .aci-key { opacity: 0; transition: none; }
-.aci-loops [data-osd-step='revealed'] .aci-key { transition-delay: ${COMET_DELAY + 400}ms; }
+.aci-loops [data-osd-step='revealed'] .aci-key { transition-delay: ${COMET_DELAY + 400}ms, 0ms; }
 .aci-hand-line { stroke-dasharray: 172; transition: stroke-dashoffset 500ms cubic-bezier(0.4, 0, 0.2, 1); }
 .aci-hand-head { transition: opacity 200ms ease-out; }
 .aci-hand-text { transition: clip-path 600ms steps(18, end); }
@@ -2583,7 +2583,7 @@ const Loop = ({ title, sub, steps, second }: { title: string; sub?: string; step
 
 /** What carries the work from the first loop into the second. */
 const Handoff = ({ label }: { label: string }) => (
-  <div style={{ width: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 280 }}>
+  <div className="aci-handoff" style={{ width: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 280 }}>
     <svg width={200} height={24} viewBox="0 0 200 24" aria-hidden="true">
       <path className="aci-hand-line" d="M 12 12 H 184" stroke={MUTED} strokeWidth={2.5} fill="none" strokeLinecap="round" />
       <path className="aci-hand-head" d="M 180 4 L 194 12 L 180 20 z" fill={MUTED} />
@@ -2591,6 +2591,567 @@ const Handoff = ({ label }: { label: string }) => (
     <div className="aci-hand-text" style={{ fontSize: 24, color: MUTED, textAlign: 'center', lineHeight: 1.3 }}>{label}</div>
   </div>
 );
+
+// ── EchoText ─────────────────────────────────────────────────────────────────
+// Ported from React Bits, "Echo Text" (src/content/TextAnimations/EchoText/EchoText.jsx),
+// https://reactbits.dev/text-animations/echo-text — kept as close to the original as possible.
+// Changes: inlined (a slide is one file), CSS as a string with the class names prefixed, names
+// prefixed so they do not clash with the deck's, loose TypeScript annotations.
+//
+// MIT + Commons Clause License Condition v1.0 — Copyright (c) 2026 David Haz. Same terms as the
+// TechText notice above: used as part of this deck, not redistributed on its own.
+/* eslint-disable */
+const ECHO_CSS = `
+.aci-echo-text {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  user-select: none;
+  contain: layout style;
+  font-kerning: normal;
+  text-rendering: geometricPrecision;
+}
+.aci-echo-text__echo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+.aci-echo-text__bursts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.aci-echo-text__echo--outline {
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: max(1px, 0.014em) currentColor;
+}
+.aci-echo-text__echo--front {
+  position: relative;
+  z-index: 2;
+  opacity: 1;
+  filter: none;
+  text-shadow: 0 0.035em 0 rgba(255, 255, 255, 0.04);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .aci-echo-text__echo:not(.aci-echo-text__echo--front) { display: none; }
+  .aci-echo-text__echo--front { transform: none !important; }
+}
+`;
+
+const echoClamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const echoDirectionVectors: any = {
+  right: { x: 1, y: 0 },
+  left: { x: -1, y: 0 },
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+  diagonal: { x: 0.72, y: 0.72 }
+};
+
+const echoEasing: any = {
+  linear: (t: number) => t,
+  'ease-out': (t: number) => 1 - Math.pow(1 - t, 3),
+  'ease-in-out': (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+  snappy: (t: number) => 1 - Math.pow(1 - t, 5)
+};
+
+const ECHO_DRIFT_PERIOD = 7200;
+const ECHO_DRIFT_IDLE = 2600;
+const ECHO_BURST_LIFE = 1100;
+const ECHO_BURST_GAP = 80;
+
+const echoReadScroll = (target: any) =>
+  target instanceof Element ? [target.scrollLeft || 0, target.scrollTop || 0] : [window.scrollX, window.scrollY];
+
+const EchoText = ({
+  text = 'Motion Echo',
+  echoes = 12,
+  lag = 0.24,
+  offset = 36,
+  direction = 'right',
+  fade = 0.72,
+  blur = 3,
+  tint = '#7dd3fc',
+  echoColors,
+  echoStyle = 'solid',
+  echoScale = 1,
+  mode = 'both',
+  trail = 'pointer',
+  clickBurst = true,
+  cursorRadius = 320,
+  duration = 900,
+  ease = 'ease-out',
+  fontSize = 'clamp(3rem, 9vw, 7rem)',
+  fontWeight = 800,
+  color = 'currentColor',
+  className = '',
+  style
+}: any) => {
+  const rootRef = useRef<any>(null);
+  const burstRef = useRef<any>(null);
+  const copyRefs = useRef<any[]>([]);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  const echoCount = prefersReducedMotion ? 0 : echoClamp(Math.round(echoes), 0, 24);
+  const echoIndexes = useMemo(() => Array.from({ length: echoCount }, (_, index) => echoCount - index), [echoCount]);
+  const ramp = Array.isArray(echoColors) && echoColors.length ? echoColors : null;
+  const canBurst = clickBurst && echoCount > 0;
+
+  const echoColor = (index: number) => {
+    if (ramp) {
+      const depth = echoCount > 1 ? (index - 1) / (echoCount - 1) : 0;
+      return `color-mix(in srgb, ${ramp[ramp.length - 1]} ${Math.round(depth * 100)}%, ${ramp[0]})`;
+    }
+    return tint ? `color-mix(in srgb, ${tint} ${Math.min(72, 18 + index * 5)}%, currentColor)` : undefined;
+  };
+
+  useEffect(() => {
+    if (!window.matchMedia) return undefined;
+
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => setPrefersReducedMotion(media.matches);
+    updateMotionPreference();
+
+    media.addEventListener?.('change', updateMotionPreference);
+    return () => media.removeEventListener?.('change', updateMotionPreference);
+  }, []);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || prefersReducedMotion) return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const vector = echoDirectionVectors[direction] || echoDirectionVectors.right;
+    const safeOffset = echoClamp(Number(offset) || 0, 0, 120);
+    const safeCursorRadius = echoClamp(Number(cursorRadius) || 320, 40, 1200);
+    const safeLag = echoClamp(Number(lag) || 0.16, 0.02, 0.5);
+    const safeFade = echoClamp(Number(fade) || 0.64, 0.1, 0.95);
+    const safeBlur = echoClamp(Number(blur) || 0, 0, 16);
+    const safeScale = echoClamp(Number(echoScale) || 1, 0.25, 2.5);
+    const safeDuration = Math.max(0, Number(duration) || 0);
+    const easeFn = echoEasing[ease] || echoEasing['ease-out'];
+    const entranceEnabled = mode === 'entrance' || mode === 'both';
+    const liveEnabled = mode === 'pointer' || mode === 'both';
+    const canHover = Boolean(window.matchMedia?.('(hover: hover) and (pointer: fine)').matches);
+    const drifting = liveEnabled && trail === 'auto';
+    const scrolling = liveEnabled && trail === 'scroll';
+    const following = liveEnabled && canHover && !scrolling;
+    const driftSpacing = 0.12 + safeLag * 1.1;
+    const burstReach = echoClamp(safeOffset / 36, 0.35, 2.5);
+    const shiftLimit = safeOffset * 4;
+
+    const state: any = {
+      targetX: 0,
+      targetY: 0,
+      lastTargetX: 0,
+      lastTargetY: 0,
+      activity: entranceEnabled ? 1 : 0,
+      positions: Array.from({ length: echoCount + 1 }, (_, index) => {
+        const entranceAmount = entranceEnabled ? safeOffset * (index + 0.35) : 0;
+        return { x: vector.x * entranceAmount, y: vector.y * entranceAmount };
+      }),
+      bends: Array.from({ length: echoCount + 1 }, () => ({ x: 0, y: 0 })),
+      startTime: performance.now(),
+      lastTime: 0,
+      drift: 0,
+      phase: 0,
+      pointerNear: false,
+      pointerTime: -Infinity,
+      visible: true,
+      pushX: 0,
+      pushY: 0,
+      velocityX: 0,
+      velocityY: 0,
+      bursts: []
+    };
+    let frame = 0;
+
+    for (let index = 1; index <= echoCount; index += 1) {
+      const copy = copyRefs.current[index];
+      if (copy) copy.style.filter = safeBlur > 0 ? `blur(${((safeBlur * index) / echoCount).toFixed(2)}px)` : 'none';
+    }
+
+    const renderBursts = (now: number) => {
+      state.bursts = state.bursts.filter((burst: any) => {
+        const age = now - burst.start;
+        let alive = false;
+
+        burst.nodes.forEach((node: any, index: number) => {
+          const local = (age - index * ECHO_BURST_GAP) / ECHO_BURST_LIFE;
+          if (local < 1) alive = true;
+
+          const progress = echoClamp(local, 0, 1);
+          const spread = 1 - Math.pow(1 - progress, 3);
+          const scale = 1 + spread * 0.34 * burstReach;
+          const peak = 0.75 * Math.pow(safeFade, index * 0.5);
+          const opacity = local <= 0 ? 0 : Math.min(1, progress * 8) * Math.pow(1 - progress, 1.5) * peak;
+
+          node.style.transform = `translate3d(${burst.x.toFixed(2)}px, ${burst.y.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+          node.style.opacity = opacity.toFixed(3);
+          node.style.filter = safeBlur > 0 ? `blur(${(safeBlur * 0.3 * spread).toFixed(2)}px)` : 'none';
+        });
+
+        if (!alive) burst.nodes.forEach((node: any) => node.remove());
+        return alive;
+      });
+    };
+
+    const renderFrame = (now: number) => {
+      frame = 0;
+
+      const dt = state.lastTime ? echoClamp(now - state.lastTime, 0, 64) : 16.67;
+      const step = dt / 16.67;
+      state.lastTime = now;
+
+      const elapsed = now - state.startTime;
+      const entranceProgress = entranceEnabled && safeDuration > 0 ? echoClamp(elapsed / safeDuration, 0, 1) : 1;
+      const entranceRest = entranceEnabled ? 1 - easeFn(entranceProgress) : 0;
+      const targetVelocity = Math.hypot(state.targetX - state.lastTargetX, state.targetY - state.lastTargetY);
+
+      state.lastTargetX = state.targetX;
+      state.lastTargetY = state.targetY;
+
+      if (drifting) {
+        const away = !following || !state.pointerNear || now - state.pointerTime > ECHO_DRIFT_IDLE;
+        state.drift += ((away ? 1 : 0) - state.drift) * (1 - Math.pow(0.965, step));
+        state.phase += (dt / ECHO_DRIFT_PERIOD) * Math.PI * 2;
+      }
+
+      if (scrolling) {
+        const blend = 1 - Math.pow(0.7, step);
+        state.velocityX += (state.pushX / Math.max(step, 0.25) - state.velocityX) * blend;
+        state.velocityY += (state.pushY / Math.max(step, 0.25) - state.velocityY) * blend;
+        state.pushX = 0;
+        state.pushY = 0;
+      }
+
+      const speed = Math.hypot(state.velocityX, state.velocityY);
+      const shiftX = echoClamp(-state.velocityX * 3.2, -shiftLimit, shiftLimit);
+      const shiftY = echoClamp(-state.velocityY * 3.2, -shiftLimit, shiftLimit);
+      const followX = state.targetX * (1 - state.drift);
+      const followY = state.targetY * (1 - state.drift);
+
+      let maxSeparation = 0;
+      let maxGap = 0;
+
+      for (let index = 0; index <= echoCount; index += 1) {
+        const copy = copyRefs.current[index];
+        const current = state.positions[index];
+        const bend = state.bends[index];
+        if (!copy || !current || !bend) continue;
+
+        const depth = echoCount ? index / echoCount : 0;
+        const entranceAmount = entranceRest * safeOffset * (index + 0.35);
+        let desiredX = followX + vector.x * entranceAmount;
+        let desiredY = followY + vector.y * entranceAmount;
+
+        if (state.drift > 0.0005) {
+          const phase = state.phase - index * driftSpacing;
+          const swing = safeOffset * state.drift * (0.25 + 0.75 * depth);
+          desiredX += Math.sin(phase) * swing;
+          desiredY += Math.sin(phase) * Math.cos(phase) * swing * 1.3;
+        }
+
+        const lerp = 1 - Math.pow(1 - echoClamp(0.34 / (1 + index * safeLag * 4.2), 0.018, 0.36), step);
+        const bendLerp = 1 - Math.pow(1 - 0.3 / (1 + depth * (1 + safeLag * 8)), step);
+
+        current.x += (desiredX - current.x) * lerp;
+        current.y += (desiredY - current.y) * lerp;
+        bend.x += (shiftX * depth - bend.x) * bendLerp;
+        bend.y += (shiftY * depth - bend.y) * bendLerp;
+        maxGap = Math.max(
+          maxGap,
+          Math.abs(desiredX - current.x),
+          Math.abs(desiredY - current.y),
+          Math.abs(shiftX * depth - bend.x),
+          Math.abs(shiftY * depth - bend.y)
+        );
+
+        const x = current.x + bend.x;
+        const y = current.y + bend.y;
+        const scale = 1 + (safeScale - 1) * depth;
+        copy.style.transform = `translate3d(${x.toFixed(3)}px, ${y.toFixed(3)}px, 0) scale(${scale.toFixed(4)})`;
+
+        if (index > 0) {
+          const front = state.positions[0];
+          maxSeparation = Math.max(maxSeparation, Math.hypot(x - front.x, y - front.y));
+        }
+      }
+
+      const separationActivity = safeOffset > 0 ? echoClamp(maxSeparation / (safeOffset * 2.25), 0, 1) : 0;
+      const targetActivity = safeOffset > 0 ? echoClamp(targetVelocity / (safeOffset * 0.35), 0, 1) : 0;
+      const nextActivity = Math.max(
+        entranceRest,
+        separationActivity,
+        targetActivity,
+        state.drift * 0.9,
+        echoClamp(speed / 5, 0, 1)
+      );
+      state.activity += (nextActivity - state.activity) * (1 - Math.pow(0.82, step));
+
+      renderBursts(now);
+
+      const running =
+        entranceProgress < 1 ||
+        state.activity > 0.002 ||
+        maxGap > 0.05 ||
+        speed > 0.02 ||
+        state.bursts.length > 0 ||
+        (drifting && state.visible);
+      if (!running) state.activity = 0;
+
+      for (let index = 1; index <= echoCount; index += 1) {
+        const copy = copyRefs.current[index];
+        if (copy) copy.style.opacity = String(Math.pow(safeFade, index) * state.activity);
+      }
+
+      if (running) frame = requestAnimationFrame(renderFrame);
+    };
+
+    const wake = () => {
+      if (!frame) {
+        state.lastTime = 0;
+        frame = requestAnimationFrame(renderFrame);
+      }
+    };
+
+    const handlePointerMove = (event: any) => {
+      const rect = root.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const deltaX = event.clientX - (rect.left + rect.width / 2);
+      const deltaY = event.clientY - (rect.top + rect.height / 2);
+      const distance = Math.hypot(deltaX, deltaY);
+      const reach = distance > 0 ? echoClamp(distance / safeCursorRadius, 0, 1) : 0;
+      const dirX = distance > 0 ? deltaX / distance : 0;
+      const dirY = distance > 0 ? deltaY / distance : 0;
+
+      state.targetX = dirX * reach * safeOffset;
+      state.targetY = dirY * reach * safeOffset * 0.72;
+      state.pointerNear = distance <= safeCursorRadius;
+      state.pointerTime = performance.now();
+      wake();
+    };
+
+    const handlePointerOut = (event: any) => {
+      if (event.relatedTarget) return;
+      state.targetX = 0;
+      state.targetY = 0;
+      state.pointerNear = false;
+      wake();
+    };
+
+    const scrollMemory = new WeakMap();
+
+    const handleScroll = (event: any) => {
+      const target = event.target;
+      if (!(target instanceof Document) && !(target instanceof Element && target.contains(root))) return;
+
+      const [x, y] = echoReadScroll(target);
+      const last = scrollMemory.get(target);
+      scrollMemory.set(target, [x, y]);
+      if (!last) return;
+
+      state.pushX -= x - last[0];
+      state.pushY -= y - last[1];
+      wake();
+    };
+
+    const handleClick = (event: any) => {
+      const layer = burstRef.current;
+      const rect = root.getBoundingClientRect();
+      if (!layer || !echoCount || !rect.width || !rect.height) return;
+
+      const originX = echoClamp((event.clientX - rect.left) / rect.width, 0, 1) * 100;
+      const originY = echoClamp((event.clientY - rect.top) / rect.height, 0, 1) * 100;
+      const count = echoClamp(Math.round(echoCount / 3) + 2, 3, 6);
+      const front = state.positions[0];
+      const nodes: any[] = [];
+
+      for (let index = 0; index < count; index += 1) {
+        const source = copyRefs.current[1 + Math.round((index / Math.max(1, count - 1)) * (echoCount - 1))];
+        if (!source) continue;
+        const node = source.cloneNode(true);
+        node.removeAttribute('data-echo-index');
+        node.style.transformOrigin = `${originX.toFixed(1)}% ${originY.toFixed(1)}%`;
+        node.style.opacity = '0';
+        layer.appendChild(node);
+        nodes.push(node);
+      }
+
+      state.bursts.push({ start: performance.now(), x: front?.x || 0, y: front?.y || 0, nodes });
+      while (state.bursts.length > 4) state.bursts.shift().nodes.forEach((node: any) => node.remove());
+      wake();
+    };
+
+    if (following) {
+      window.addEventListener('pointermove', handlePointerMove, { passive: true });
+      document.addEventListener('pointerout', handlePointerOut);
+    }
+
+    if (scrolling) {
+      scrollMemory.set(document, echoReadScroll(document));
+      for (let node = root.parentElement; node; node = node.parentElement) scrollMemory.set(node, echoReadScroll(node));
+      document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+    }
+
+    if (clickBurst) root.addEventListener('click', handleClick);
+
+    let observer: any;
+    if (drifting && typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(entries => {
+        state.visible = entries[entries.length - 1].isIntersecting;
+        if (state.visible) wake();
+      });
+      observer.observe(root);
+    }
+
+    renderFrame(state.startTime);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerout', handlePointerOut);
+      document.removeEventListener('scroll', handleScroll, { capture: true } as any);
+      root.removeEventListener('click', handleClick);
+      observer?.disconnect();
+      state.bursts.forEach((burst: any) => burst.nodes.forEach((node: any) => node.remove()));
+    };
+  }, [
+    blur,
+    clickBurst,
+    cursorRadius,
+    direction,
+    duration,
+    ease,
+    echoCount,
+    echoScale,
+    fade,
+    lag,
+    mode,
+    offset,
+    prefersReducedMotion,
+    trail
+  ]);
+
+  const rootStyle = {
+    fontSize,
+    fontWeight,
+    color,
+    cursor: canBurst ? 'pointer' : undefined,
+    ...style
+  };
+
+  const echoClassName = echoStyle === 'outline' ? 'aci-echo-text__echo aci-echo-text__echo--outline' : 'aci-echo-text__echo';
+
+  return (
+    <span ref={rootRef} className={`aci-echo-text ${className}`.trim()} style={rootStyle}>
+      <style>{ECHO_CSS}</style>
+      {echoIndexes.map(index => (
+        <span
+          aria-hidden="true"
+          className={echoClassName}
+          data-echo-index={index}
+          key={`echo-${index}`}
+          ref={element => {
+            copyRefs.current[index] = element;
+          }}
+          style={{ color: echoColor(index), opacity: 0 }}
+        >
+          {text}
+        </span>
+      ))}
+      <span aria-hidden="true" className="aci-echo-text__bursts" ref={burstRef} />
+      <span
+        className="aci-echo-text__echo aci-echo-text__echo--front"
+        data-echo-index="0"
+        ref={element => {
+          copyRefs.current[0] = element;
+        }}
+      >
+        {text}
+      </span>
+    </span>
+  );
+};
+/* eslint-enable */
+
+// ── Demo time ────────────────────────────────────────────────────────────────
+
+/**
+ * The cue for a live demo: a reveal of its own on a workflow page. While it is the latest reveal
+ * the page's content blurs back and "Demo Time!" rises in (Echo Text, its "Wake" preset, in
+ * inovex green into Leuchtblau); the next `→` clears it as the following content arrives.
+ * The text remounts on every showing, so the entrance plays each time, also when stepping back.
+ */
+const DEMO_CSS = `
+.aci-loops > [data-osd-step]:has(> .aci-demo, > .aci-who-intro) { display: contents; }
+.aci-demo { opacity: 0; transition: opacity 350ms ease-out; pointer-events: none; }
+.aci-demo.aci-demo-on { opacity: 1; transition-duration: 500ms; }
+.aci-page :is(.aci-head, .aci-handoff) { transition: filter 500ms ease-out; }
+.aci-page:has(.aci-demo-on) :is(.aci-head, .aci-loop, .aci-key, .aci-handoff) { filter: blur(14px) brightness(0.55); }
+@media (prefers-reduced-motion: reduce) {
+  .aci-demo, .aci-page :is(.aci-head, .aci-loop, .aci-key, .aci-handoff) { transition: none !important; }
+}
+`;
+
+const DemoTime = () => {
+  const active = useIsActivePage();
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [showing, setShowing] = useState(0); // 0: not current; otherwise a key per showing
+  useEffect(() => {
+    const own = ref.current?.closest('[data-osd-step]');
+    const parent = own?.parentElement;
+    if (!active || !own || !parent) return;
+    const check = () => {
+      const revealed = parent.querySelectorAll(":scope > [data-osd-step='revealed']");
+      const current = revealed.length > 0 && revealed[revealed.length - 1] === own;
+      setShowing((n) => (current ? (n > 0 ? n : -n + 1) : n > 0 ? -n : n));
+    };
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(parent, { subtree: true, attributes: true, attributeFilter: ['data-osd-step'] });
+    return () => observer.disconnect();
+  }, [active]);
+  const on = active && showing > 0;
+  return (
+    <div
+      ref={ref}
+      className={`aci-demo${on ? ' aci-demo-on' : ''}`}
+      style={{ position: 'absolute', inset: `-${CONTENT_TOP}px -${PAD}px -${PAD}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}
+    >
+      {on ? (
+        <EchoText
+          key={showing}
+          text="Demo Time!"
+          echoes={16}
+          lag={0.3}
+          offset={24}
+          direction="down"
+          fade={0.82}
+          blur={5}
+          mode="entrance"
+          clickBurst={false}
+          duration={1200}
+          ease="ease-in-out"
+          fontSize={200}
+          fontWeight={700}
+          color={ACCENT}
+          echoColors={[ACCENT, `rgb(${LEUCHTBLAU_RGB})`]}
+          style={{ fontFamily: SANS }}
+        />
+      ) : null}
+    </div>
+  );
+};
 
 /** The key to who does a step, centred below the first loop. */
 const WhoLegend = () => (
@@ -2606,10 +3167,14 @@ const WhoLegend = () => (
  * own after the first loop, so the steps can be talked through before who does them. Later loop
  * pages show them with the first loop, the audience knows the glyphs by then.
  */
-const LoopPage = ({ name, first, handoff, second, introduce }: { name: string; first: ReactNode; handoff: string; second: ReactNode; introduce?: boolean }) => (
+const LoopPage = ({ name, first, handoff, second, introduce, demos = [] }: { name: string; first: ReactNode; handoff: string; second: ReactNode; introduce?: boolean; demos?: ('first' | 'second')[] }) => (
   <Shell>
+    <div className="aci-page">
     <style>{LOOP_CSS}</style>
-    <SkillH name={name} suffix="Workflow" />
+    <style>{DEMO_CSS}</style>
+    <div className="aci-head">
+      <SkillH name={name} suffix="Workflow" />
+    </div>
     <div className="aci-loops" style={{ marginTop: 40, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
       <Steps>
         <Step duration={1}>
@@ -2623,13 +3188,24 @@ const LoopPage = ({ name, first, handoff, second, introduce }: { name: string; f
             </div>
           </Step>
         ) : null}
+        {demos.includes('first') ? (
+          <Step duration={1}>
+            <DemoTime />
+          </Step>
+        ) : null}
         <Step duration={1}>
           <div style={{ display: 'flex', alignItems: 'flex-start', ['--d' as string]: `${HANDOFF_MS}ms` }}>
             <Handoff label={handoff} />
             {second}
           </div>
         </Step>
+        {demos.includes('second') ? (
+          <Step duration={1}>
+            <DemoTime />
+          </Step>
+        ) : null}
       </Steps>
+    </div>
     </div>
   </Shell>
 );
@@ -2637,6 +3213,7 @@ const LoopPage = ({ name, first, handoff, second, introduce }: { name: string; f
 const ReviewMrLoop: Page = () => (
   <LoopPage
     introduce
+    demos={['first', 'second']}
     name="review-mr"
     first={
       <Loop
@@ -2665,6 +3242,7 @@ const ReviewMrLoop: Page = () => (
 
 const ReworkMrLoop: Page = () => (
   <LoopPage
+    demos={['second']}
     name="rework-mr"
     first={
       <Loop
@@ -2924,8 +3502,10 @@ export const notes: (string | undefined)[] = [
   [
     '• Topic collection: each topic curated (keep / drop / merge), drafted, posted by you',
     '• → who does what: ✦ agent, person = you, both = together',
+    '• → DEMO 1: /review-mr !1 (clean MR)',
     '• Author answers or pushes → validate the responses, round by round',
     '• News is judged before you get to it: settled · more · wait — you ack or follow up',
+    '• → DEMO 2: /review-mr !2 (validate the author\'s responses)',
   ].join('\n'),
   // rework-mr
   [
@@ -2938,6 +3518,7 @@ export const notes: (string | undefined)[] = [
     '• Plan phase: every open thread gets a proposal — fix, reply or push back — you agree',
     '• No code until every topic has a plan',
     '• Fix phase: one topic at a time — checks, diff in hunk, push, reply in the thread',
+    '• → DEMO 3: /rework-mr !3 (my own MR, with review comments)',
   ].join('\n'),
   // 06 under the hood
   [
