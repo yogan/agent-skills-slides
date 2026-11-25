@@ -14,8 +14,9 @@ to the artwork (the slidev master's version looks squished).
   fades the logo, then lands on `/review-mr`.
 - Landing on a transit page directly (thumbnail click, deck opened there) does not move on.
 - The rays in the background lean towards the mouse cursor. Park the cursor off the slide.
-- On the workflow pages a comet runs each loop and lights the steps it passes; a spark runs
-  along the arrow between the loops. Only on the page being presented, once the loop is shown.
+- On the workflow pages a comet runs the current loop (the last one revealed) and lights the
+  steps it passes; revealing the second sends one spark along the arrow. Only on the page
+  being presented.
 - The contact lines on the close are links and re-scramble on hover.
 
 ## Why it is built this way

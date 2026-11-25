@@ -2204,8 +2204,9 @@ const onRing = (deg: number) => ({ x: RING.cx + RING.r * Math.cos(rad(deg)), y: 
 const gapAt = (deg: number) => (deg === -90 ? ARC_GAP.top : ARC_GAP.side);
 
 const LOOP_CSS = `
-.aci-spark { stroke-dasharray: 36 400; stroke-dashoffset: 36; animation: aci-spark 2600ms cubic-bezier(0.5, 0, 0.5, 1) infinite; }
-@keyframes aci-spark { 0% { stroke-dashoffset: 36; opacity: 0; } 15% { opacity: 1; } 70% { stroke-dashoffset: -172; opacity: 1; } 80%, 100% { stroke-dashoffset: -172; opacity: 0; } }
+.aci-spark { stroke-dasharray: 36 400; stroke-dashoffset: 36; opacity: 0; }
+[data-osd-step='revealed'] .aci-spark { animation: aci-spark 1400ms cubic-bezier(0.5, 0, 0.5, 1) 150ms 1 both; }
+@keyframes aci-spark { 0% { stroke-dashoffset: 36; opacity: 0; } 15% { opacity: 1; } 85% { stroke-dashoffset: -172; opacity: 1; } 100% { stroke-dashoffset: -172; opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .aci-spark { animation: none; opacity: 0; } }
 .aci-loop .aci-arc { transition: stroke-dashoffset 700ms cubic-bezier(0.4, 0, 0.2, 1) 200ms; }
 .aci-loops [data-osd-step='pending'] .aci-arc { stroke-dashoffset: var(--len); }
@@ -2276,7 +2277,11 @@ const Loop = ({ title, sub, steps, phase = 0 }: { title: string; sub?: string; s
     const t0 = performance.now();
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
-      const shown = svg.current?.closest('[data-osd-step]')?.getAttribute('data-osd-step') !== 'pending';
+      // Only the current loop runs: the last one revealed on its page.
+      const own = svg.current?.closest('[data-osd-step]');
+      const revealed = own?.parentElement?.querySelectorAll(":scope > [data-osd-step='revealed']");
+      const shown = !!own && !!revealed?.length && revealed[revealed.length - 1] === own;
+      if (!shown) glows.current.forEach((g) => g?.setAttribute('opacity', '0'));
       if (comet.current) comet.current.style.opacity = shown ? '1' : '0';
       if (!shown) return;
       const head = -90 + (((now - t0) / LAP_MS + phase) % 1) * 360;
@@ -2344,7 +2349,7 @@ const Handoff = ({ label }: { label: string }) => (
   <div style={{ width: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 280 }}>
     <svg width={200} height={24} viewBox="0 0 200 24" aria-hidden="true">
       <path d="M 12 12 H 184" stroke={MUTED} strokeWidth={2.5} fill="none" strokeLinecap="round" />
-      {/* a spark carries the work across, in the comets' colour */}
+      {/* a spark carries the work across once, as the second loop appears */}
       <path className="aci-spark" d="M 12 12 H 184" stroke={ACCENT} strokeWidth={3} fill="none" strokeLinecap="round" filter="url(#aci-comet-glow)" />
       <path d="M 180 4 L 194 12 L 180 20 z" fill={MUTED} />
     </svg>
