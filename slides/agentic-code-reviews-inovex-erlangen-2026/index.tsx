@@ -1609,6 +1609,9 @@ const SideRays = ({
     let pageVisible = document.visibilityState !== 'hidden';
     let lost = false;
 
+    let lastMove = -1e9;
+    let idle = 0;
+    let breath = 1;
     let resizePending = false;
     const applyResize = () => {
       const s = settingsRef.current;
@@ -1660,7 +1663,15 @@ const SideRays = ({
 
       const tracking = s.followMouse && pointer.inside && !reduced;
       const pointed = tracking ? pointerAngle(s) : 0;
-      const target = tracking ? raysClamp(pointed, -s.spread, s.spread) * s.mouseInfluence : 0;
+      // Deck addition: with the pointer still, the rays drift and breathe on their own: a slow
+      // sway of the aim and a swell of the light, both sums of incommensurate sines so the motion
+      // never visibly repeats. `idle` eases in over a couple of seconds after the last move.
+      const idleTarget = reduced ? 0 : raysClamp((now - lastMove - 1500) / 2000, 0, 1);
+      idle += (idleTarget - idle) * (1 - Math.exp(-dt * 1.5));
+      const wall = now / 1000;
+      const drift = idle * s.spread * (0.22 * Math.sin(wall * 0.21) + 0.12 * Math.sin(wall * 0.53 + 1.3));
+      breath = 1 + idle * (0.16 * Math.sin(wall * 0.62) + 0.09 * Math.sin(wall * 1.37 + 2.1) + 0.05 * Math.sin(wall * 2.9 + 0.4));
+      const target = (tracking ? raysClamp(pointed, -s.spread, s.spread) * s.mouseInfluence : 0) + drift;
       const focusTarget = tracking ? s.mouseInfluence : 0;
       const ease = 1 - Math.exp(-dt * 6);
       if (tracking) focus.angle += (raysClamp(pointed - aim.value, -s.spread * 1.5, s.spread * 1.5) - focus.angle) * ease;
@@ -1683,7 +1694,7 @@ const SideRays = ({
       // the light brightens or dims smoothly over a page change instead of jumping.
       if (raysShared.level < 0) raysShared.level = s.intensity;
       raysShared.level += (s.intensity - raysShared.level) * (1 - Math.exp(-dt * 2.5));
-      gl.uniform1f(u.uIntensity, raysShared.level);
+      gl.uniform1f(u.uIntensity, raysShared.level * breath);
       gl.uniform1f(u.uSpread, s.spread);
       gl.uniform1f(u.uDensity, s.density);
       gl.uniform1f(u.uSharpness, s.sharpness);
@@ -1722,6 +1733,7 @@ const SideRays = ({
       const rect = container.getBoundingClientRect();
       pointer.x = event.clientX - rect.left;
       pointer.y = event.clientY - rect.top;
+      lastMove = performance.now();
       pointer.inside =
         event.clientX >= rect.left &&
         event.clientX <= rect.right &&
@@ -2209,15 +2221,36 @@ const rad = (deg: number) => (deg * Math.PI) / 180;
 const onRing = (deg: number) => ({ x: RING.cx + RING.r * Math.cos(rad(deg)), y: RING.cy + RING.r * Math.sin(rad(deg)) });
 const gapAt = (deg: number) => (deg === -90 ? ARC_GAP.top : ARC_GAP.side);
 
+/**
+ * How a loop arrives, in beats, all keyed off its <Step> flipping to `revealed` (the Step's own
+ * fade is instant; these do the work). `--d` delays a whole loop: 0 for the first, and for the
+ * second the time the hand-off takes: its arrow draws, its label types itself, then the ring
+ * fades in, its arcs draw, and only then the comet starts (`COMET_DELAY`). The key arrives last.
+ * Delays live on the revealed state only, so stepping back hides everything at once.
+ */
+const HANDOFF_MS = 1100;
+const COMET_DELAY = 1500;
 const LOOP_CSS = `
-.aci-spark { stroke-dasharray: 36 400; stroke-dashoffset: 36; opacity: 0; }
-[data-osd-step='revealed'] .aci-spark { animation: aci-spark 1400ms cubic-bezier(0.5, 0, 0.5, 1) 150ms 1 both; }
-@keyframes aci-spark { 0% { stroke-dashoffset: 36; opacity: 0; } 15% { opacity: 1; } 85% { stroke-dashoffset: -172; opacity: 1; } 100% { stroke-dashoffset: -172; opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .aci-spark { animation: none; opacity: 0; } }
-.aci-loop .aci-arc { transition: stroke-dashoffset 700ms cubic-bezier(0.4, 0, 0.2, 1) 200ms; }
-.aci-loops [data-osd-step='pending'] .aci-arc { stroke-dashoffset: var(--len); }
-.aci-loops [data-osd-step='revealed'] .aci-arc { stroke-dashoffset: 0; }
-@media (prefers-reduced-motion: reduce) { .aci-loop .aci-arc { transition: none; } }
+.aci-loops [data-osd-step] .aci-loop { transform-origin: 50% 55%; transition: opacity 800ms ease-out, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1); }
+.aci-loops [data-osd-step='pending'] .aci-loop { opacity: 0; transform: scale(0.94); transition: none; }
+.aci-loops [data-osd-step='revealed'] .aci-loop { transition-delay: var(--d, 0ms); }
+.aci-loop .aci-arc { transition: stroke-dashoffset 800ms cubic-bezier(0.4, 0, 0.2, 1); }
+.aci-loops [data-osd-step='pending'] .aci-arc { stroke-dashoffset: var(--len); transition: none; }
+.aci-loops [data-osd-step='revealed'] .aci-arc { stroke-dashoffset: 0; transition-delay: calc(var(--d, 0ms) + 450ms); }
+.aci-key { transition: opacity 900ms ease-out; }
+.aci-loops [data-osd-step='pending'] .aci-key { opacity: 0; transition: none; }
+.aci-loops [data-osd-step='revealed'] .aci-key { transition-delay: ${COMET_DELAY + 400}ms; }
+.aci-hand-line { stroke-dasharray: 172; transition: stroke-dashoffset 500ms cubic-bezier(0.4, 0, 0.2, 1); }
+.aci-hand-head { transition: opacity 200ms ease-out; }
+.aci-hand-text { transition: clip-path 600ms steps(18, end); }
+.aci-loops [data-osd-step='pending'] .aci-hand-line { stroke-dashoffset: 172; transition: none; }
+.aci-loops [data-osd-step='pending'] .aci-hand-head { opacity: 0; transition: none; }
+.aci-loops [data-osd-step='pending'] .aci-hand-text { clip-path: inset(0 100% 0 0); transition: none; }
+.aci-loops [data-osd-step='revealed'] .aci-hand-head { transition-delay: 420ms; }
+.aci-loops [data-osd-step='revealed'] .aci-hand-text { clip-path: inset(0 0 0 0); transition-delay: 500ms; }
+@media (prefers-reduced-motion: reduce) {
+  .aci-loops * { transition: none !important; }
+}
 `;
 
 /** One arc of a ring, from one step to the next, with its length known for the draw-in. */
@@ -2298,7 +2331,7 @@ const LAP_MS = 5200;
 const TRAIL = 48;
 const TRAIL_STEP = 0.9; // degrees between trail dots
 
-const Loop = ({ title, sub, steps }: { title: string; sub?: string; steps: [LoopStep, LoopStep, LoopStep] }) => {
+const Loop = ({ title, sub, steps, second }: { title: string; sub?: string; steps: [LoopStep, LoopStep, LoopStep]; second?: boolean }) => {
   const active = useIsActivePage();
   const svg = useRef<SVGSVGElement | null>(null);
   const comet = useRef<SVGGElement | null>(null);
@@ -2319,7 +2352,12 @@ const Loop = ({ title, sub, steps }: { title: string; sub?: string; steps: [Loop
         t0 = -1;
         return;
       }
-      if (t0 < 0) t0 = now;
+      // the comet waits for the ring to finish arriving
+      if (t0 < 0) t0 = now + COMET_DELAY + (second ? HANDOFF_MS : 0);
+      if (now < t0) {
+        if (comet.current) comet.current.style.opacity = '0';
+        return;
+      }
       const head = -90 + (((now - t0) / LAP_MS) % 1) * 360;
       const dots = comet.current?.children;
       if (dots)
@@ -2338,7 +2376,7 @@ const Loop = ({ title, sub, steps }: { title: string; sub?: string; steps: [Loop
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [active]);
+  }, [active, second]);
   return (
     <svg ref={svg} className="aci-loop" width={RING_W} height={RING_H} viewBox={`0 0 ${RING_W} ${RING_H}`} style={{ display: 'block', overflow: 'visible' }}>
       <defs>
@@ -2392,12 +2430,10 @@ const Loop = ({ title, sub, steps }: { title: string; sub?: string; steps: [Loop
 const Handoff = ({ label }: { label: string }) => (
   <div style={{ width: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 280 }}>
     <svg width={200} height={24} viewBox="0 0 200 24" aria-hidden="true">
-      <path d="M 12 12 H 184" stroke={MUTED} strokeWidth={2.5} fill="none" strokeLinecap="round" />
-      {/* a spark carries the work across once, as the second loop appears */}
-      <path className="aci-spark" d="M 12 12 H 184" stroke={ACCENT} strokeWidth={3} fill="none" strokeLinecap="round" filter="url(#aci-comet-glow)" />
-      <path d="M 180 4 L 194 12 L 180 20 z" fill={MUTED} />
+      <path className="aci-hand-line" d="M 12 12 H 184" stroke={MUTED} strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      <path className="aci-hand-head" d="M 180 4 L 194 12 L 180 20 z" fill={MUTED} />
     </svg>
-    <div style={{ fontSize: 24, color: MUTED, textAlign: 'center', lineHeight: 1.3 }}>{label}</div>
+    <div className="aci-hand-text" style={{ fontSize: 24, color: MUTED, textAlign: 'center', lineHeight: 1.3 }}>{label}</div>
   </div>
 );
 
@@ -2407,17 +2443,17 @@ const LoopPage = ({ name, first, handoff, second }: { name: string; first: React
     <SkillH name={name} suffix="Workflow" />
     <div className="aci-loops" style={{ marginTop: 40, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
       <Steps>
-        <Step duration={320}>
+        <Step duration={1}>
           {first}
-          {/* the key arrives with the first loop, bottom left of the page */}
-          <div style={{ position: 'absolute', left: 0, bottom: 0, display: 'flex', gap: 40 }}>
+          {/* the key arrives once the first loop is up, bottom left of the page */}
+          <div className="aci-key" style={{ position: 'absolute', left: 0, bottom: 0, display: 'flex', gap: 40 }}>
             <WhoKey who="agent" label="agent" />
             <WhoKey who="both" label="together" />
             <WhoKey who="human" label="human" />
           </div>
         </Step>
-        <Step duration={320}>
-          <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+        <Step duration={1}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', ['--d' as string]: `${HANDOFF_MS}ms` }}>
             <Handoff label={handoff} />
             {second}
           </div>
@@ -2444,6 +2480,7 @@ const ReviewMrLoop: Page = () => (
     second={
       <Loop
         title="Validate responses"
+        second
         steps={[
           { label: 'news', detail: 'replies · pushes', who: 'agent' },
           { label: 'judge', detail: 'settled · more · wait', who: 'agent' },
@@ -2471,6 +2508,7 @@ const ReworkMrLoop: Page = () => (
     second={
       <Loop
         title="Fix phase"
+        second
         steps={[
           { label: 'fix', detail: 'built to the plan', who: 'agent' },
           { label: 'review', detail: 'the diff in hunk', who: 'both' },
