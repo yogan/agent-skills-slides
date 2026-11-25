@@ -2326,7 +2326,10 @@ const HANDOFF_MS = 1100;
 const COMET_DELAY = 1500;
 const LOOP_CSS = `
 .aci-loops [data-osd-step] .aci-loop { will-change: opacity, transform; transform-origin: 50% 55%; transition: opacity 800ms ease-out, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1); }
-.aci-loops [data-osd-step]:has(~ [data-osd-step='revealed']) .aci-loop { opacity: 0.45; }
+.aci-loops [data-osd-step]:has(~ [data-osd-step='revealed'] .aci-loop) .aci-loop { opacity: 0.45; }
+.aci-tab { transition: opacity 500ms ease-out; }
+.aci-loops:has([data-osd-step='pending'] > .aci-who-intro) .aci-tab { opacity: 0; transition: none; }
+.aci-loops [data-osd-step='revealed'] > .aci-who-intro .aci-key { transition-delay: 250ms; }
 .aci-loops [data-osd-step='pending'] .aci-loop { opacity: 0; transform: scale(0.94); transition: none; }
 .aci-loops [data-osd-step='revealed'] .aci-loop { transition-delay: var(--d, 0ms); }
 .aci-loop .aci-arc { transition: stroke-dashoffset 800ms cubic-bezier(0.4, 0, 0.2, 1); }
@@ -2437,7 +2440,7 @@ const WhoTab = ({ who, x, y }: { who: Who; x: number; y: number }) => {
   const w = who === 'both' ? 62 : 40;
   const box = { x: x - w / 2, y: y - 16, width: w, height: 32, rx: 16 };
   return (
-    <g>
+    <g className="aci-tab">
       <rect {...box} fill="#06164D" />
       <rect {...box} fill={WHO_SKIN[who].fill} stroke={WHO_SKIN[who].stroke} strokeWidth={2} />
       <WhoGlyphs who={who} x={who === 'both' ? x - 10.5 : x} y={y} size={18} />
@@ -2486,7 +2489,7 @@ const Loop = ({ title, sub, steps, second }: { title: string; sub?: string; step
       raf = requestAnimationFrame(tick);
       // Only the current loop runs: the last one revealed on its page.
       const own = svg.current?.closest('[data-osd-step]');
-      const revealed = own?.parentElement?.querySelectorAll(":scope > [data-osd-step='revealed']");
+      const revealed = own?.parentElement?.querySelectorAll(":scope > [data-osd-step='revealed']:has(.aci-loop)");
       const shown = !!own && !!revealed?.length && revealed[revealed.length - 1] === own;
       if (!shown) glows.current.forEach((g) => g?.setAttribute('opacity', '0'));
       if (comet.current) comet.current.style.opacity = shown ? '1' : '0';
@@ -2579,7 +2582,21 @@ const Handoff = ({ label }: { label: string }) => (
   </div>
 );
 
-const LoopPage = ({ name, first, handoff, second }: { name: string; first: ReactNode; handoff: string; second: ReactNode }) => (
+/** The key to who does a step, bottom left of the page. */
+const WhoLegend = () => (
+  <div className="aci-key" style={{ position: 'absolute', left: 0, bottom: 0, display: 'flex', gap: 40 }}>
+    <WhoKey who="agent" label="agent" />
+    <WhoKey who="both" label="together" />
+    <WhoKey who="human" label="human" />
+  </div>
+);
+
+/**
+ * `introduce`: the first time the loops are shown, the who-tabs and the key get a reveal of their
+ * own after the first loop, so the steps can be talked through before who does them. Later loop
+ * pages show them with the first loop, the audience knows the glyphs by then.
+ */
+const LoopPage = ({ name, first, handoff, second, introduce }: { name: string; first: ReactNode; handoff: string; second: ReactNode; introduce?: boolean }) => (
   <Shell>
     <style>{LOOP_CSS}</style>
     <SkillH name={name} suffix="Workflow" />
@@ -2587,13 +2604,15 @@ const LoopPage = ({ name, first, handoff, second }: { name: string; first: React
       <Steps>
         <Step duration={1}>
           {first}
-          {/* the key arrives once the first loop is up, bottom left of the page */}
-          <div className="aci-key" style={{ position: 'absolute', left: 0, bottom: 0, display: 'flex', gap: 40 }}>
-            <WhoKey who="agent" label="agent" />
-            <WhoKey who="both" label="together" />
-            <WhoKey who="human" label="human" />
-          </div>
+          {introduce ? null : <WhoLegend />}
         </Step>
+        {introduce ? (
+          <Step duration={1}>
+            <div className="aci-who-intro">
+              <WhoLegend />
+            </div>
+          </Step>
+        ) : null}
         <Step duration={1}>
           <div style={{ display: 'flex', alignItems: 'flex-start', ['--d' as string]: `${HANDOFF_MS}ms` }}>
             <Handoff label={handoff} />
@@ -2607,6 +2626,7 @@ const LoopPage = ({ name, first, handoff, second }: { name: string; first: React
 
 const ReviewMrLoop: Page = () => (
   <LoopPage
+    introduce
     name="review-mr"
     first={
       <Loop
@@ -2893,6 +2913,7 @@ export const notes: (string | undefined)[] = [
   // review-mr workflow
   [
     '• Topic collection: each topic curated (keep / drop / merge), drafted, posted by you',
+    '• → who does what: ✦ agent, person = you, both = together',
     '• Author answers or pushes → validate the responses, round by round',
     '• News is judged before you get to it: settled · more · wait — you ack or follow up',
   ].join('\n'),

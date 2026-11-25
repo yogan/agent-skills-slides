@@ -18,6 +18,8 @@ to the artwork (the slidev master's version looks squished).
   steps it passes; revealing the second sends one spark along the arrow. Only on the page
   being presented.
 - Once the second loop is up, the first dims, so the new one has the focus.
+- On the review-mr workflow the who-tabs and the key take a `→` of their own, after the first
+  loop and before the second. The rework-mr workflow shows them with its first loop.
 - **Who does a step is a shape as well as a colour** (a tab on the step's top edge: spark for
   the agent, person for the human, both for together), so it survives a washed-out projector
   and colour-blind viewers. Emoji were rejected as too amateurish.
