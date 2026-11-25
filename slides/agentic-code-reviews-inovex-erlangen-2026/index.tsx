@@ -2379,12 +2379,13 @@ const StepPill = ({ at, label, detail, who, glowRef }: LoopStep & { at: number; 
       <rect {...box} fill="#06164D" />
       <rect {...box} fill={WHO_SKIN[who].fill} stroke={WHO_SKIN[who].stroke} strokeWidth={2} />
       <rect ref={glowRef} {...box} fill="rgba(255,255,255,0.08)" stroke="#FFFFFF" strokeWidth={2.5} opacity={0} filter="url(#aci-comet-glow)" />
-      <text x={p.x} y={p.y - 4} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={TEXT}>
+      <text x={p.x} y={p.y + 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={TEXT}>
         {label}
       </text>
-      <text x={p.x} y={p.y + 30} textAnchor="middle" fontFamily={SANS} fontSize={23} fill={MUTED}>
+      <text x={p.x} y={p.y + 34} textAnchor="middle" fontFamily={SANS} fontSize={23} fill={MUTED}>
         {detail}
       </text>
+      <WhoTab who={who} x={p.x} y={box.y} />
     </g>
   );
 };
@@ -2400,18 +2401,63 @@ const WHO_SKIN: Record<Who, { fill: string; stroke: string }> = {
   both: { fill: 'url(#aci-both-fill)', stroke: 'url(#aci-both-stroke)' },
 };
 
+/**
+ * Who, as a shape as well as a colour, so it reads on a washed-out projector and without colour
+ * vision: a four-point spark for the agent (the usual AI mark), a person for the human, both
+ * for together. Monochrome line-weight glyphs in the pill's own colours; centred on (x, y).
+ */
+const AGENT_C = 'rgba(150,175,255,1)';
+const HUMAN_C = 'rgba(125,244,129,1)';
+const Spark = ({ x, y, size, color }: { x: number; y: number; size: number; color: string }) => (
+  <path
+    transform={`translate(${x - size / 2} ${y - size / 2}) scale(${size / 24})`}
+    d="M12 1.5C12.9 7.6 16.4 11.1 22.5 12C16.4 12.9 12.9 16.4 12 22.5C11.1 16.4 7.6 12.9 1.5 12C7.6 11.1 11.1 7.6 12 1.5Z"
+    fill={color}
+  />
+);
+const Person = ({ x, y, size, color }: { x: number; y: number; size: number; color: string }) => (
+  <g transform={`translate(${x - size / 2} ${y - size / 2}) scale(${size / 24})`} fill="none" stroke={color} strokeWidth={2.4} strokeLinecap="round">
+    <circle cx={12} cy={7.5} r={4.5} />
+    <path d="M3.5 22.5C3.5 17.5 7.3 14 12 14S20.5 17.5 20.5 22.5" />
+  </g>
+);
+const WhoGlyphs = ({ who, x, y, size }: { who: Who; x: number; y: number; size: number }) => {
+  if (who === 'agent') return <Spark x={x} y={y} size={size} color={AGENT_C} />;
+  if (who === 'human') return <Person x={x} y={y} size={size} color={HUMAN_C} />;
+  return (
+    <g>
+      <Spark x={x} y={y} size={size} color={AGENT_C} />
+      <Person x={x + size * 1.15} y={y} size={size} color={HUMAN_C} />
+    </g>
+  );
+};
+
+/** Who, as a small tab on the step's top edge: the glyphs in a capsule of the step's skin. */
+const WhoTab = ({ who, x, y }: { who: Who; x: number; y: number }) => {
+  const w = who === 'both' ? 62 : 40;
+  const box = { x: x - w / 2, y: y - 16, width: w, height: 32, rx: 16 };
+  return (
+    <g>
+      <rect {...box} fill="#06164D" />
+      <rect {...box} fill={WHO_SKIN[who].fill} stroke={WHO_SKIN[who].stroke} strokeWidth={2} />
+      <WhoGlyphs who={who} x={who === 'both' ? x - 10.5 : x} y={y} size={18} />
+    </g>
+  );
+};
+
 /** The three kinds, as a small key; same pill shapes as the steps. */
 const WhoKey = ({ who, label }: { who: Who; label: string }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-    <svg width={44} height={24} viewBox="0 0 44 24" aria-hidden="true">
+    <svg width={68} height={34} viewBox="0 0 68 34" aria-hidden="true">
       <defs>
         <linearGradient id={`aci-key-${who}`} x1="0" x2="1">
           <stop offset="0%" stopColor="rgba(120,150,255,0.95)" />
           <stop offset="100%" stopColor="rgba(125,244,129,0.95)" />
         </linearGradient>
       </defs>
-      <rect x={1.5} y={1.5} width={41} height={21} rx={10.5} fill={who === 'both' ? 'rgba(85,170,190,0.18)' : WHO_SKIN[who].fill}
+      <rect x={1.5} y={1.5} width={65} height={31} rx={15.5} fill={who === 'both' ? 'rgba(85,170,190,0.18)' : WHO_SKIN[who].fill}
         stroke={who === 'both' ? `url(#aci-key-${who})` : WHO_SKIN[who].stroke} strokeWidth={2} />
+      <WhoGlyphs who={who} x={who === 'both' ? 23.5 : 34} y={17} size={18} />
     </svg>
     <span style={{ fontSize: 26, color: MUTED }}>{label}</span>
   </div>

@@ -18,6 +18,9 @@ to the artwork (the slidev master's version looks squished).
   steps it passes; revealing the second sends one spark along the arrow. Only on the page
   being presented.
 - Once the second loop is up, the first dims, so the new one has the focus.
+- **Who does a step is a shape as well as a colour** (a tab on the step's top edge: spark for
+  the agent, person for the human, both for together), so it survives a washed-out projector
+  and colour-blind viewers. Emoji were rejected as too amateurish.
 - The contact lines on the close are links and re-scramble on hover.
 
 ## Why it is built this way
