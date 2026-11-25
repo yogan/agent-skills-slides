@@ -193,7 +193,7 @@ const Shell = ({ children, mark = 'faint' }: { children: ReactNode; mark?: MarkM
       overflow: 'hidden',
     }}
   >
-    <Rays />
+    <Rays bright={mark !== 'faint'} />
     <Mark mode={mark} />
     <div
       style={{
@@ -1321,7 +1321,7 @@ const TechText = ({
 // MIT + Commons Clause License Condition v1.0 — Copyright (c) 2026 David Haz. Same terms as the
 // TechText notice above: used as part of this deck, not redistributed on its own.
 /* eslint-disable */
-const raysShared = { time: Math.random() * 100, revealed: false };
+const raysShared = { time: Math.random() * 100, revealed: false, level: -1 };
 
 const RAYS_PIXEL_BUDGET = 2.4e6;
 const RAYS_TAU = Math.PI * 2;
@@ -1673,7 +1673,11 @@ const SideRays = ({
       gl.uniform3f(u.uColorA, s.colorA[0], s.colorA[1], s.colorA[2]);
       gl.uniform3f(u.uColorB, s.colorB[0], s.colorB[1], s.colorB[2]);
       gl.uniform1f(u.uBlend, s.blend);
-      gl.uniform1f(u.uIntensity, s.intensity);
+      // Deck addition: the shown intensity eases towards the page's, shared across instances, so
+      // the light brightens or dims smoothly over a page change instead of jumping.
+      if (raysShared.level < 0) raysShared.level = s.intensity;
+      raysShared.level += (s.intensity - raysShared.level) * (1 - Math.exp(-dt * 2.5));
+      gl.uniform1f(u.uIntensity, raysShared.level);
       gl.uniform1f(u.uSpread, s.spread);
       gl.uniform1f(u.uDensity, s.density);
       gl.uniform1f(u.uSharpness, s.sharpness);
@@ -1694,7 +1698,7 @@ const SideRays = ({
         Math.abs(target - aim.value) > 1e-4 ||
         Math.abs(aim.velocity) > 1e-4 ||
         Math.abs(focusTarget - focus.strength) > 1e-3;
-      const busy = (s.speed > 0 && !reduced) || reveal < 1 || settling;
+      const busy = (s.speed > 0 && !reduced) || reveal < 1 || settling || Math.abs(s.intensity - raysShared.level) > 1e-3;
       if (busy && visible && pageVisible) raf = requestAnimationFrame(frame);
     };
 
@@ -1800,7 +1804,7 @@ const hasWebgl2 = () => {
   return webgl2Support;
 };
 
-const Rays = () => {
+const Rays = ({ bright }: { bright: boolean }) => {
   const active = useIsActivePage();
   if (!active || !hasWebgl2()) return <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: CORNER_GLOW, zIndex: 0 }} />;
   return (
@@ -1810,7 +1814,7 @@ const Rays = () => {
         rayColor2="#7aa2ff"
         blend={0.7}
         speed={1.5}
-        intensity={1.6}
+        intensity={bright ? 2.4 : 0.6}
         origin="top-right"
         followMouse
         mouseInfluence={0.25}
