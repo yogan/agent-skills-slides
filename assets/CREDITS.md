@@ -89,3 +89,14 @@ All JS is bundled locally by `open-slide build` (Vite) into `dist/`. The icons a
 4 KB inline threshold and get inlined as data URIs; the two PNGs are emitted as files beside the
 bundle. Either way everything ships inside `dist/`, so the built deck loads no third-party
 script and makes **no network request at runtime**.
+
+## inovex Meetup Erlangen 2026 deck
+
+`slides/agentic-code-reviews-inovex-erlangen-2026/` carries its own assets:
+
+- **inovex logo and mark** — official inovex artwork (horizontal lockup from the inovex typst
+  theme, mark paths from the inovex slidev master), used for an inovex talk.
+- **Atkinson Hyperlegible** (regular, bold) and **Atkinson Hyperlegible Mono** — SIL Open Font
+  License 1.1, Braille Institute; vendored as woff2 so the deck works offline.
+- **TechText** (the animated "Agentic" on the title) — a port of React Bits' Tech Text,
+  © 2026 David Haz, MIT + Commons Clause; the notice is kept in `index.tsx` above the code.
