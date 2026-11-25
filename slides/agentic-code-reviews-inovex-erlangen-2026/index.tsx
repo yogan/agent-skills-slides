@@ -2204,6 +2204,9 @@ const onRing = (deg: number) => ({ x: RING.cx + RING.r * Math.cos(rad(deg)), y: 
 const gapAt = (deg: number) => (deg === -90 ? ARC_GAP.top : ARC_GAP.side);
 
 const LOOP_CSS = `
+.aci-spark { stroke-dasharray: 36 400; stroke-dashoffset: 36; animation: aci-spark 2600ms cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+@keyframes aci-spark { 0% { stroke-dashoffset: 36; opacity: 0; } 15% { opacity: 1; } 70% { stroke-dashoffset: -172; opacity: 1; } 80%, 100% { stroke-dashoffset: -172; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .aci-spark { animation: none; opacity: 0; } }
 .aci-loop .aci-arc { transition: stroke-dashoffset 700ms cubic-bezier(0.4, 0, 0.2, 1) 200ms; }
 .aci-loops [data-osd-step='pending'] .aci-arc { stroke-dashoffset: var(--len); }
 .aci-loops [data-osd-step='revealed'] .aci-arc { stroke-dashoffset: 0; }
@@ -2227,20 +2230,19 @@ const Arc = ({ from, to }: { from: number; to: number }) => {
   );
 };
 
-const StepPill = ({ at, label, detail }: { at: number; label: string; detail: string }) => {
+/**
+ * A step on the ring. Its glow ring (`aci-glow`) is lit by the comet as it passes; the comet's
+ * loop writes the opacity straight to the DOM, so the page never re-renders per frame.
+ */
+const StepPill = ({ at, label, detail, glowRef }: { at: number; label: string; detail: string; glowRef?: (el: SVGRectElement | null) => void }) => {
   const p = onRing(at);
+  const box = { x: p.x - PILL.w / 2, y: p.y - PILL.h / 2, width: PILL.w, height: PILL.h, rx: PILL.h / 2 };
   return (
     <g>
-      <rect
-        x={p.x - PILL.w / 2}
-        y={p.y - PILL.h / 2}
-        width={PILL.w}
-        height={PILL.h}
-        rx={PILL.h / 2}
-        fill={STEP_SKIN.fill}
-        stroke={STEP_SKIN.stroke}
-        strokeWidth={2}
-      />
+      {/* opaque underlay, so the comet passes behind the step rather than through its text */}
+      <rect {...box} fill="#06164D" />
+      <rect {...box} fill={STEP_SKIN.fill} stroke={STEP_SKIN.stroke} strokeWidth={2} />
+      <rect ref={glowRef} {...box} fill="rgba(125,244,129,0.10)" stroke={ACCENT} strokeWidth={2.5} opacity={0} filter="url(#aci-comet-glow)" />
       <text x={p.x} y={p.y - 4} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={TEXT}>
         {label}
       </text>
@@ -2253,37 +2255,97 @@ const StepPill = ({ at, label, detail }: { at: number; label: string; detail: st
 
 type LoopStep = { label: string; detail: string };
 
-const Loop = ({ title, sub, steps }: { title: string; sub?: string; steps: [LoopStep, LoopStep, LoopStep] }) => (
-  <svg className="aci-loop" width={RING_W} height={RING_H} viewBox={`0 0 ${RING_W} ${RING_H}`} style={{ display: 'block', overflow: 'visible' }}>
-    <defs>
-      <marker id="aci-loop-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill={MUTED} />
-      </marker>
-    </defs>
-    <g fill="none" stroke={MUTED} strokeWidth={2.5} strokeLinecap="round">
-      <Arc from={ANGLES[0]} to={ANGLES[1]} />
-      <Arc from={ANGLES[1]} to={ANGLES[2]} />
-      <Arc from={ANGLES[2]} to={ANGLES[0]} />
-    </g>
-    <text x={RING.cx} y={sub ? RING.cy - 14 : RING.cy + 12} textAnchor="middle" fontFamily={SANS} fontSize={36} fontWeight={700} fill={ACCENT}>
-      {title}
-    </text>
-    {sub ? (
-      <text x={RING.cx} y={RING.cy + 24} textAnchor="middle" fontFamily={SANS} fontSize={24} fill={MUTED}>
-        {sub}
+/**
+ * A comet runs the ring clockwise, one lap per `LAP_MS`, a fading trail behind it; each step
+ * lights up as it passes. Behind the pills, so it seems to go through each step. Runs only on
+ * the page the audience sees and only once the loop is revealed; thumbnails show the ring at
+ * rest. `phase` offsets the second loop so the two never move in lockstep.
+ */
+const LAP_MS = 5200;
+const TRAIL = 48;
+const TRAIL_STEP = 0.9; // degrees between trail dots
+
+const Loop = ({ title, sub, steps, phase = 0 }: { title: string; sub?: string; steps: [LoopStep, LoopStep, LoopStep]; phase?: number }) => {
+  const active = useIsActivePage();
+  const svg = useRef<SVGSVGElement | null>(null);
+  const comet = useRef<SVGGElement | null>(null);
+  const glows = useRef<(SVGRectElement | null)[]>([]);
+  useEffect(() => {
+    if (!active || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const shown = svg.current?.closest('[data-osd-step]')?.getAttribute('data-osd-step') !== 'pending';
+      if (comet.current) comet.current.style.opacity = shown ? '1' : '0';
+      if (!shown) return;
+      const head = -90 + (((now - t0) / LAP_MS + phase) % 1) * 360;
+      const dots = comet.current?.children;
+      if (dots)
+        for (let i = 0; i < dots.length; i++) {
+          const p = onRing(head - i * TRAIL_STEP);
+          dots[i].setAttribute('cx', String(p.x));
+          dots[i].setAttribute('cy', String(p.y));
+        }
+      ANGLES.forEach((at, k) => {
+        let d = head - at;
+        d = ((d % 360) + 540) % 360 - 180; // signed distance, head minus step
+        // brightest just as the head arrives, then a slow afterglow
+        const lit = d < 0 ? Math.exp(-((d / 10) ** 2)) : Math.exp(-d / 40);
+        glows.current[k]?.setAttribute('opacity', lit.toFixed(3));
+      });
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, phase]);
+  return (
+    <svg ref={svg} className="aci-loop" width={RING_W} height={RING_H} viewBox={`0 0 ${RING_W} ${RING_H}`} style={{ display: 'block', overflow: 'visible' }}>
+      <defs>
+        <marker id="aci-loop-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill={MUTED} />
+        </marker>
+        <filter id="aci-comet-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <g fill="none" stroke={MUTED} strokeWidth={2.5} strokeLinecap="round">
+        <Arc from={ANGLES[0]} to={ANGLES[1]} />
+        <Arc from={ANGLES[1]} to={ANGLES[2]} />
+        <Arc from={ANGLES[2]} to={ANGLES[0]} />
+      </g>
+      {active ? (
+        <g ref={comet} filter="url(#aci-comet-glow)" style={{ opacity: 0, transition: 'opacity 400ms' }}>
+          {Array.from({ length: TRAIL }, (_, i) => (
+            <circle key={i} r={i === 0 ? 6 : 4.5 * (1 - i / TRAIL) + 0.8} fill={i === 0 ? '#EFFFF0' : ACCENT} opacity={i === 0 ? 1 : 0.7 * (1 - i / TRAIL) ** 1.5} />
+          ))}
+        </g>
+      ) : null}
+      <text x={RING.cx} y={sub ? RING.cy - 14 : RING.cy + 12} textAnchor="middle" fontFamily={SANS} fontSize={36} fontWeight={700} fill={ACCENT}>
+        {title}
       </text>
-    ) : null}
-    <StepPill at={ANGLES[0]} {...steps[0]} />
-    <StepPill at={ANGLES[1]} {...steps[1]} />
-    <StepPill at={ANGLES[2]} {...steps[2]} />
-  </svg>
-);
+      {sub ? (
+        <text x={RING.cx} y={RING.cy + 24} textAnchor="middle" fontFamily={SANS} fontSize={24} fill={MUTED}>
+          {sub}
+        </text>
+      ) : null}
+      <StepPill at={ANGLES[0]} {...steps[0]} glowRef={(el) => (glows.current[0] = el)} />
+      <StepPill at={ANGLES[1]} {...steps[1]} glowRef={(el) => (glows.current[1] = el)} />
+      <StepPill at={ANGLES[2]} {...steps[2]} glowRef={(el) => (glows.current[2] = el)} />
+    </svg>
+  );
+};
 
 /** What carries the work from the first loop into the second. */
 const Handoff = ({ label }: { label: string }) => (
   <div style={{ width: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 280 }}>
     <svg width={200} height={24} viewBox="0 0 200 24" aria-hidden="true">
       <path d="M 12 12 H 184" stroke={MUTED} strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      {/* a spark carries the work across, in the comets' colour */}
+      <path className="aci-spark" d="M 12 12 H 184" stroke={ACCENT} strokeWidth={3} fill="none" strokeLinecap="round" filter="url(#aci-comet-glow)" />
       <path d="M 180 4 L 194 12 L 180 20 z" fill={MUTED} />
     </svg>
     <div style={{ fontSize: 24, color: MUTED, textAlign: 'center', lineHeight: 1.3 }}>{label}</div>
@@ -2325,6 +2387,7 @@ const ReviewMrLoop: Page = () => (
     second={
       <Loop
         title="Validate responses"
+        phase={0.5}
         steps={[
           { label: 'news', detail: 'replies · pushes' },
           { label: 'judge', detail: 'settled · more · wait' },
@@ -2352,6 +2415,7 @@ const ReworkMrLoop: Page = () => (
     second={
       <Loop
         title="Fix phase"
+        phase={0.5}
         steps={[
           { label: 'fix', detail: 'checks pass' },
           { label: 'review', detail: 'the diff in hunk' },
