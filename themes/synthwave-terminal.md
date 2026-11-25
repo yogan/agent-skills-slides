@@ -122,7 +122,7 @@ const NEON_SUNSET_RGB = '255,140,60';
 
 The scenery is two pieces: a `TEXTURE` string of CSS background layers (starfield, nebula
 blooms, scanlines) and a `Horizon` SVG (the perspective floor grid). Both are reproduced in
-full in `slides/mr-review-with-agent-skills/index.tsx` — **copy them from there**, they are
+full in `slides/agentic-code-reviews-seneca-2026/index.tsx` — **copy them from there**, they are
 long and position-specific. The rules that matter if you re-derive them:
 
 - **Starfield**: literal positions, no RNG, so the field never shifts between renders.

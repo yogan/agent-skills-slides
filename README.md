@@ -99,7 +99,7 @@ render as a plain list.
 
 Notes live in **two** places, deliberately:
 
-- `slides/mr-review-with-agent-skills/index.tsx` → the `notes` export. This is what the
+- `slides/agentic-code-reviews-seneca-2026/index.tsx` → the `notes` export. This is what the
   presenter window (`P`) shows. **This is the copy that matters during the talk.**
 - [`SPEAKER-NOTES.md`](SPEAKER-NOTES.md) — the same notes plus the detail that does not fit a
   notes pane: the show-of-hands script, and the exact `/review-mr !1` invocation to paste.
@@ -111,7 +111,7 @@ runs ~4 minutes unattended and has to be going before you talk through the list.
 
 ## What to edit
 
-Everything is one file: `slides/mr-review-with-agent-skills/index.tsx`. `npm run dev` hot-reloads.
+Everything is one file: `slides/agentic-code-reviews-seneca-2026/index.tsx`. `npm run dev` hot-reloads.
 
 | Want to change | Where |
 | --- | --- |
@@ -144,7 +144,7 @@ reveal: a naive walk captures it blank and silently mis-indexes every page after
 
 | Path | What |
 | --- | --- |
-| `slides/mr-review-with-agent-skills/index.tsx` | the whole deck — 5 pages, `notes`, `design`, and the background art |
+| `slides/agentic-code-reviews-seneca-2026/index.tsx` | the whole deck — 5 pages, `notes`, `design`, and the background art |
 | `themes/synthwave-terminal.md` | the house style — palette, type, paste-ready components. **Build new slides from this.** |
 | `themes/synthwave-terminal.demo.tsx` | live preview of the theme, shown in the dev UI's Themes panel |
 | `assets/` | avatar, Seneca mark, three line icons — see [`CREDITS.md`](assets/CREDITS.md) |

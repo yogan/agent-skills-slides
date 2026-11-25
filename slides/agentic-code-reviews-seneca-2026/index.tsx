@@ -988,7 +988,7 @@ export const notes: (string | undefined)[] = [
 ];
 
 export const meta: SlideMeta = {
-  title: 'Agentic Code Reviews',
+  title: 'Agentic Code Reviews · Seneca 2026',
   theme: 'synthwave-terminal',
   createdAt: '2026-08-05T15:19:53.556Z',
 };
