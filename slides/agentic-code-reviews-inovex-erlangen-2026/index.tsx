@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 import { Step, Steps, useIsActivePage } from '@open-slide/core';
 import goomba from '@assets/goomba.png';
@@ -203,9 +203,11 @@ const Gloss = ({ mode }: { mode: MarkMode }) => {
   const ref = useRef<HTMLCanvasElement>(null);
   useLayoutEffect(() => {
     if (!active) return;
-    raysShared.gloss = ref.current;
+    if (!ref.current) return;
+    const target = { canvas: ref.current };
+    raysShared.glosses.add(target);
     return () => {
-      if (raysShared.gloss === ref.current) raysShared.gloss = null;
+      raysShared.glosses.delete(target);
     };
   }, [active]);
   if (!active || !hasWebgl2() || (mode !== 'brand' && motion !== 'aci-to-faint')) return null;
@@ -1390,8 +1392,10 @@ const TechText = ({
 // MIT + Commons Clause License Condition v1.0 — Copyright (c) 2026 David Haz. Same terms as the
 // TechText notice above: used as part of this deck, not redistributed on its own.
 /* eslint-disable */
-const raysShared = { time: Math.random() * 100, revealed: false, level: -1, tilt: NaN, falloff: NaN, gloss: null as HTMLCanvasElement | null };
-// The part of the canvas the gloss copies (the visible mark, bottom right), as fractions.
+// A gloss: a 2D canvas that gets the part of each rays frame under it, then `clip` cuts it to a shape.
+type GlossTarget = { canvas: HTMLCanvasElement; clip?: (g2: CanvasRenderingContext2D) => void };
+const raysShared = { time: Math.random() * 100, revealed: false, level: -1, tilt: NaN, falloff: NaN, glosses: new Set<GlossTarget>() };
+// Where the mark's gloss sits (the visible mark, bottom right), as fractions of the page.
 const GLOSS_X = 1320 / 1920;
 const GLOSS_Y = 480 / 1080;
 
@@ -1782,21 +1786,28 @@ const SideRays = ({
       gl.uniform3f(u.uFocus, focus.angle, Math.max(0.06, s.spread * 0.25), focus.strength * 1.4);
       gl.uniform1f(u.uSway, reduced ? 0 : 1);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-      // Deck addition: copy the mark's corner of this frame to the gloss layer (see `Gloss`).
-      const gloss = raysShared.gloss;
-      if (gloss?.isConnected) {
-        const sx = Math.floor(canvas.width * GLOSS_X);
-        const sy = Math.floor(canvas.height * GLOSS_Y);
-        const w = canvas.width - sx;
-        const h = canvas.height - sy;
-        if (gloss.width !== w || gloss.height !== h) {
-          gloss.width = w;
-          gloss.height = h;
-        }
-        const g2 = gloss.getContext('2d');
-        if (g2) {
-          g2.clearRect(0, 0, w, h);
-          g2.drawImage(canvas, sx, sy, w, h, 0, 0, w, h);
+      // Deck addition: copy the part of this frame under each gloss layer to it (see `Gloss`,
+      // `DemoGloss`), in canvas pixels, so the shine sits exactly under the beams.
+      if (raysShared.glosses.size) {
+        const frameBox = canvas.getBoundingClientRect();
+        const k = canvas.width / frameBox.width;
+        for (const { canvas: gloss, clip } of raysShared.glosses) {
+          if (!gloss.isConnected) continue;
+          const box = gloss.getBoundingClientRect();
+          const sx = Math.round((box.left - frameBox.left) * k);
+          const sy = Math.round((box.top - frameBox.top) * k);
+          const w = Math.max(1, Math.round(box.width * k));
+          const h = Math.max(1, Math.round(box.height * k));
+          if (gloss.width !== w || gloss.height !== h) {
+            gloss.width = w;
+            gloss.height = h;
+          }
+          const g2 = gloss.getContext('2d');
+          if (g2) {
+            g2.clearRect(0, 0, w, h);
+            g2.drawImage(canvas, sx, sy, w, h, 0, 0, w, h);
+            clip?.(g2);
+          }
         }
       }
 
@@ -1911,8 +1922,27 @@ const hasWebgl2 = () => {
   return webgl2Support;
 };
 
+/**
+ * The demo cue turns the lights up while it shows (`DemoTime` sets it; only the active page's
+ * does): the rays go as bright as on the title and the close, and ease back when it clears. They
+ * keep their aim through the middle of the page, where the cue is, instead of tilting to the mark.
+ */
+const demoLights = { on: false, subscribers: new Set<() => void>() };
+const setDemoLights = (on: boolean) => {
+  if (demoLights.on === on) return;
+  demoLights.on = on;
+  demoLights.subscribers.forEach((notify) => notify());
+};
+const subscribeDemoLights = (notify: () => void) => {
+  demoLights.subscribers.add(notify);
+  return () => {
+    demoLights.subscribers.delete(notify);
+  };
+};
+
 const Rays = ({ bright }: { bright: boolean }) => {
   const active = useIsActivePage();
+  const lit = useSyncExternalStore(subscribeDemoLights, () => demoLights.on, () => false);
   if (!active || !hasWebgl2()) return <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: CORNER_GLOW, zIndex: 0 }} />;
   return (
     <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0, mixBlendMode: 'screen' }}>
@@ -1921,10 +1951,10 @@ const Rays = ({ bright }: { bright: boolean }) => {
         rayColor2="#7aa2ff"
         blend={0.7}
         speed={1.5}
-        intensity={bright ? 2.4 : 0.85}
+        intensity={bright || lit ? 2.4 : 0.85}
         origin="top-right"
         tilt={bright ? 22 : 0}
-        falloff={bright ? 0.9 : 1.6}
+        falloff={bright || lit ? 0.9 : 1.6}
         followMouse
         mouseInfluence={0.25}
       />
@@ -2321,10 +2351,12 @@ const gapAt = (deg: number) => (deg === -90 ? ARC_GAP.top : ARC_GAP.side);
  * `will-change` keeps each ring on its own layer for good: otherwise Chrome drops the layer when
  * the transition ends and re-rasters the text snapped to the pixel grid, a visible 1px jump.
  * Once the second loop is up, the first dims so the new one has the focus.
+ * `--wait` delays all of it when the step follows a demo cue (set in DEMO_CSS).
  */
 const HANDOFF_MS = 1100;
 const COMET_DELAY = 1500;
 const WHO_STAGGER = 350; // the who-tabs, then the key's entries, one after the other
+const DEMO_DIM_MS = 1400; // after a demo cue, the lights dim back before the next step arrives
 const LOOP_CSS = `
 .aci-loops [data-osd-step] .aci-loop { will-change: opacity, transform; transform-origin: 50% 55%; transition: opacity 800ms ease-out, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1), filter 500ms ease-out; }
 .aci-loops [data-osd-step]:has(~ [data-osd-step='revealed'] .aci-loop) .aci-loop { opacity: 0.45; }
@@ -2338,10 +2370,10 @@ const LOOP_CSS = `
 .aci-loops [data-osd-step='pending'] > .aci-who-intro .aci-key > * { opacity: 0; transition: none; }
 .aci-loops [data-osd-step='revealed'] > .aci-who-intro .aci-key > * { transition-delay: calc(${3 * WHO_STAGGER}ms + var(--i) * ${WHO_STAGGER}ms); }
 .aci-loops [data-osd-step='pending'] .aci-loop { opacity: 0; transform: scale(0.94); transition: none; }
-.aci-loops [data-osd-step='revealed'] .aci-loop { transition-delay: var(--d, 0ms), var(--d, 0ms), 0ms; }
+.aci-loops [data-osd-step='revealed'] .aci-loop { transition-delay: calc(var(--wait, 0ms) + var(--d, 0ms)), calc(var(--wait, 0ms) + var(--d, 0ms)), 0ms; }
 .aci-loop .aci-arc { transition: stroke-dashoffset 800ms cubic-bezier(0.4, 0, 0.2, 1); }
 .aci-loops [data-osd-step='pending'] .aci-arc { stroke-dashoffset: var(--len); transition: none; }
-.aci-loops [data-osd-step='revealed'] .aci-arc { stroke-dashoffset: 0; transition-delay: calc(var(--d, 0ms) + 450ms); }
+.aci-loops [data-osd-step='revealed'] .aci-arc { stroke-dashoffset: 0; transition-delay: calc(var(--wait, 0ms) + var(--d, 0ms) + 450ms); }
 .aci-key { transition: opacity 900ms ease-out, filter 500ms ease-out; }
 .aci-loops [data-osd-step='pending'] .aci-key { opacity: 0; transition: none; }
 .aci-loops [data-osd-step='revealed'] .aci-key { transition-delay: ${COMET_DELAY + 400}ms, 0ms; }
@@ -2351,8 +2383,9 @@ const LOOP_CSS = `
 .aci-loops [data-osd-step='pending'] .aci-hand-line { stroke-dashoffset: 172; transition: none; }
 .aci-loops [data-osd-step='pending'] .aci-hand-head { opacity: 0; transition: none; }
 .aci-loops [data-osd-step='pending'] .aci-hand-text { clip-path: inset(0 100% 0 0); transition: none; }
-.aci-loops [data-osd-step='revealed'] .aci-hand-head { transition-delay: 420ms; }
-.aci-loops [data-osd-step='revealed'] .aci-hand-text { clip-path: inset(0 0 0 0); transition-delay: 500ms; }
+.aci-loops [data-osd-step='revealed'] .aci-hand-line { transition-delay: var(--wait, 0ms); }
+.aci-loops [data-osd-step='revealed'] .aci-hand-head { transition-delay: calc(var(--wait, 0ms) + 420ms); }
+.aci-loops [data-osd-step='revealed'] .aci-hand-text { clip-path: inset(0 0 0 0); transition-delay: calc(var(--wait, 0ms) + 500ms); }
 @media (prefers-reduced-motion: reduce) {
   .aci-loops * { transition: none !important; }
 }
@@ -2508,7 +2541,7 @@ const Loop = ({ title, sub, steps, second }: { title: string; sub?: string; step
         return;
       }
       // the comet waits for the ring to finish arriving
-      if (t0 < 0) t0 = now + COMET_DELAY + (second ? HANDOFF_MS : 0);
+      if (t0 < 0) t0 = now + (parseFloat(getComputedStyle(own).getPropertyValue('--wait')) || 0) + COMET_DELAY + (second ? HANDOFF_MS : 0);
       if (now < t0) {
         if (comet.current) comet.current.style.opacity = '0';
         return;
@@ -3091,8 +3124,13 @@ const EchoText = ({
  * the page's content blurs back and "Demo Time!" rises in (Echo Text, its "Wake" preset, in
  * inovex green into Leuchtblau); the next `→` clears it as the following content arrives.
  * The text remounts on every showing, so the entrance plays each time, also when stepping back.
+ * While it shows, the lights go up (`demoLights`) and the letters shine under the beams like the
+ * colour mark does (`DemoGloss`). When it clears, the loop after it (`aci-after-demo`) waits
+ * `DEMO_DIM_MS` (`--wait`, see LOOP_CSS) for the lights to dim back before it arrives; so does the
+ * dimming of the loop before. (`:has()` does not nest, hence the class rather than a selector.)
  */
 const DEMO_CSS = `
+.aci-loops:has(> [data-osd-step='revealed'] > .aci-after-demo) { --wait: ${DEMO_DIM_MS}ms; }
 .aci-loops > [data-osd-step]:has(> .aci-demo, > .aci-who-intro) { display: contents; }
 .aci-demo { opacity: 0; transition: opacity 350ms ease-out; pointer-events: none; }
 .aci-demo.aci-demo-on { opacity: 1; transition-duration: 500ms; }
@@ -3102,6 +3140,56 @@ const DEMO_CSS = `
   .aci-demo, .aci-page :is(.aci-head, .aci-loop, .aci-key, .aci-handoff) { transition: none !important; }
 }
 `;
+
+/**
+ * The gloss on "Demo Time!": the mark's gloss (see `Gloss`), cut to the front letters instead of
+ * masked to the mark. The letters are drawn into the canvas where the DOM has them, every frame,
+ * so the shine follows them while they rise in.
+ */
+const DemoGloss = () => {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useLayoutEffect(() => {
+    const canvas = ref.current;
+    const front = canvas?.parentElement?.querySelector<HTMLElement>('.aci-echo-text__echo--front');
+    if (!canvas || !front) return;
+    const clip = (g2: CanvasRenderingContext2D) => {
+      const box = canvas.getBoundingClientRect();
+      const at = front.getBoundingClientRect();
+      const k = (canvas.width / box.width) * (at.width / front.offsetWidth); // canvas px per CSS px
+      const css = getComputedStyle(front);
+      const size = parseFloat(css.fontSize);
+      const lineHeight = css.lineHeight.endsWith('px') ? parseFloat(css.lineHeight) : parseFloat(css.lineHeight) * size;
+      g2.font = `${css.fontWeight} ${size * k}px ${css.fontFamily}`;
+      g2.letterSpacing = `${(parseFloat(css.letterSpacing) || 0) * k}px`;
+      g2.fontKerning = 'normal';
+      const text = front.textContent ?? '';
+      const m = g2.measureText(text);
+      // the baseline where CSS puts it: half the leading, then the font's ascent
+      const baseline = (lineHeight * k - m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2 + m.fontBoundingBoxAscent;
+      // twice the light: the green is near full brightness already, so a colour-dodge of the
+      // beams alone barely shows on it (the mark's darker colours take it more readily)
+      g2.globalCompositeOperation = 'lighter';
+      g2.drawImage(canvas, 0, 0);
+      g2.globalCompositeOperation = 'destination-in';
+      g2.fillStyle = '#fff';
+      g2.fillText(text, (at.left - box.left) * (canvas.width / box.width), (at.top - box.top) * (canvas.height / box.height) + baseline);
+      g2.globalCompositeOperation = 'source-over';
+    };
+    const target = { canvas, clip };
+    raysShared.glosses.add(target);
+    return () => {
+      raysShared.glosses.delete(target);
+    };
+  }, []);
+  if (!hasWebgl2()) return null;
+  return (
+    <canvas
+      ref={ref}
+      aria-hidden="true"
+      style={{ position: 'absolute', left: -40, top: -60, width: 'calc(100% + 80px)', height: 'calc(100% + 120px)', zIndex: 3, pointerEvents: 'none', mixBlendMode: 'color-dodge' }}
+    />
+  );
+};
 
 const DemoTime = () => {
   const active = useIsActivePage();
@@ -3122,6 +3210,11 @@ const DemoTime = () => {
     return () => observer.disconnect();
   }, [active]);
   const on = active && showing > 0;
+  useEffect(() => {
+    if (!on) return;
+    setDemoLights(true);
+    return () => setDemoLights(false);
+  }, [on]);
   return (
     <div
       ref={ref}
@@ -3129,25 +3222,27 @@ const DemoTime = () => {
       style={{ position: 'absolute', inset: `-${CONTENT_TOP}px -${PAD}px -${PAD}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}
     >
       {on ? (
-        <EchoText
-          key={showing}
-          text="Demo Time!"
-          echoes={16}
-          lag={0.3}
-          offset={24}
-          direction="down"
-          fade={0.82}
-          blur={5}
-          mode="entrance"
-          clickBurst={false}
-          duration={1200}
-          ease="ease-in-out"
-          fontSize={200}
-          fontWeight={700}
-          color={ACCENT}
-          echoColors={[ACCENT, `rgb(${LEUCHTBLAU_RGB})`]}
-          style={{ fontFamily: SANS }}
-        />
+        <span key={showing} style={{ position: 'relative', display: 'inline-block' }}>
+          <EchoText
+            text="Demo Time!"
+            echoes={16}
+            lag={0.3}
+            offset={24}
+            direction="down"
+            fade={0.82}
+            blur={5}
+            mode="entrance"
+            clickBurst={false}
+            duration={1200}
+            ease="ease-in-out"
+            fontSize={200}
+            fontWeight={700}
+            color={ACCENT}
+            echoColors={[ACCENT, `rgb(${LEUCHTBLAU_RGB})`]}
+            style={{ fontFamily: SANS }}
+          />
+          <DemoGloss />
+        </span>
       ) : null}
     </div>
   );
@@ -3194,7 +3289,7 @@ const LoopPage = ({ name, first, handoff, second, introduce, demos = [] }: { nam
           </Step>
         ) : null}
         <Step duration={1}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', ['--d' as string]: `${HANDOFF_MS}ms` }}>
+          <div className={demos.includes('first') ? 'aci-after-demo' : undefined} style={{ display: 'flex', alignItems: 'flex-start', ['--d' as string]: `${HANDOFF_MS}ms` }}>
             <Handoff label={handoff} />
             {second}
           </div>

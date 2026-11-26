@@ -23,7 +23,9 @@ to the artwork (the slidev master's version looks squished).
   The rework-mr workflow shows them with its first loop.
 - **Demo cues** are reveals of their own on the workflow pages: after the first loop of
   review-mr (demo 1), after its second (demo 2), after both loops of rework-mr (demo 3). The
-  page blurs back and "Demo Time!" rises in; the next `→` clears it.
+  page blurs back, the lights go up as on the title and "Demo Time!" rises in, shining where the
+  beams cross it; the next `→` clears it, and the second loop waits for the lights to dim back
+  (`DEMO_DIM_MS`) before it arrives.
 - **Who does a step is a shape as well as a colour** (a tab on the step's top edge: spark for
   the agent, person for the human, both for together), so it survives a washed-out projector
   and colour-blind viewers. Emoji were rejected as too amateurish.
@@ -48,13 +50,19 @@ to the artwork (the slidev master's version looks squished).
   `raysShared`). A fake sheen on the mark was tried and dropped: it did not match the rays.
 - **The gloss on the colour mark is the rays' own frame**: SideRays copies the mark's corner
   of each frame into `raysShared.gloss`, a 2D canvas masked to the mark and colour-dodged over
-  it (`Gloss`), so the shine sits exactly under the beams. A second WebGL instance would have
+  it (`Gloss`), so the shine sits exactly under the beams. Each gloss canvas gets the part of the
+  frame under it; "Demo Time!" uses the same (`DemoGloss`), cut to its letters by drawing them
+  into the canvas where the DOM has them, with the light doubled, since the near-full green barely
+  takes a colour-dodge. A second WebGL instance would have
   double-eased the shared state. Bright pages also lower `falloff` (eased) so the beams reach
   the corner at all. The gloss fades out with the mark.
 - **Demo cue = the latest reveal**: `<Step>`s add up, so `DemoTime` watches the step attributes
   and shows only while its step is the last revealed one; the other content is blurred by
   `:has(.aci-demo-on)`. The cue's steps are `display: contents`, so they do not count as flex
-  items between the loops.
+  items between the loops. The lights are module state too (`demoLights`), set by the active
+  page's cue and read by `Rays`. The wait after demo 1 is a class on the second loop
+  (`aci-after-demo`) that sets `--wait` for the whole row: `:has()` does not nest, so "the step
+  after a demo step" cannot be a selector.
 - **Side Rays** needs WebGL2; without it, and on inactive pages, the static corner glow stands
   in. Its GLSL uses `clamp`: the port renames the JS helper, and must not touch the shader.
 
