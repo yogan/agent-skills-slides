@@ -2271,7 +2271,7 @@ const ReviewMr: Page = () => (
           <Row label="agent review" note="findings, severity-tagged" aside="/review-branch" />
         </Step>
         <Step duration={320}>
-          <Row label="drafting" note="each topic worded as a comment" aside="posted by hand only" />
+          <Row label="drafting" note="each topic worded as a comment" aside="posted on click only" />
         </Step>
         <Step duration={320}>
           <Row label="follow-up" note="replies and pushes" aside="agent judges · human acks" />
@@ -3316,7 +3316,7 @@ const ReviewMrLoop: Page = () => (
         steps={[
           { label: 'curate', detail: 'keep · drop · merge', who: 'both' },
           { label: 'draft', detail: 'the comment', who: 'both' },
-          { label: 'post', detail: 'by hand only', who: 'human' },
+          { label: 'post', detail: 'on click, as agreed', who: 'human' },
         ]}
       />
     }
@@ -3345,7 +3345,7 @@ const ReworkMrLoop: Page = () => (
         steps={[
           { label: 'thread', detail: 'what is asked', who: 'agent' },
           { label: 'propose', detail: 'fix · reply · push back', who: 'both' },
-          { label: 'agree', detail: 'the plan, by hand', who: 'human' },
+          { label: 'agree', detail: 'the plan, on click', who: 'human' },
         ]}
       />
     }
@@ -3357,7 +3357,7 @@ const ReworkMrLoop: Page = () => (
         steps={[
           { label: 'fix', detail: 'built to the plan', who: 'agent' },
           { label: 'review', detail: 'the diff in hunk', who: 'both' },
-          { label: 'push', detail: 'and reply, by hand', who: 'human' },
+          { label: 'push', detail: 'and reply, on click', who: 'human' },
         ]}
       />
     }
