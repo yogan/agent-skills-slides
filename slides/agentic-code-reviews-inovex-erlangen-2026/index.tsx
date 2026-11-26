@@ -3386,10 +3386,10 @@ const Tile = ({ tag, title, text }: { tag: string; title: string; text: string }
 /** The tiles one per press on the page itself; all at once on its transit copy. */
 const TechBody = ({ stepped, mark }: { stepped: boolean; mark: MarkMode }) => {
   const tiles = [
-    <Tile key="skill" tag="SKILL.md + scripts/" title="Workflow in prose, state in Python" text="glab for GitLab, per-MR state survives sessions" />,
-    <Tile key="mod" tag="review-ui mod" title="Cards, buttons, sidebar" text="a press runs the script directly, no model turn" />,
-    <Tile key="hunk" tag="hunk + tmux" title="Diffs in a real diff viewer" text="line notes go back to the agent" />,
-    <Tile key="press" tag="one-time press token" title="Only humans post, push, resolve" text="the mod blocks the model's own attempts" />,
+    <Tile key="skill" tag="SKILL.md + scripts/" title="Workflow in prose, tooling in Python" text="glab for GitLab, per-MR state in JSON" />,
+    <Tile key="mod" tag="review-ui Claude mod" title="Cards, buttons, sidebar" text="a press runs the script directly, no model turn" />,
+    <Tile key="hunk" tag="hunk + tmux" title="Diffs in a real diff viewer" text="comments on diff lines go back to the agent" />,
+    <Tile key="press" tag="human in the loop" title="Public steps need a human click" text="post, push, resolve: one-time token per click" />,
   ];
   return (
     <Shell mark={mark}>
