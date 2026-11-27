@@ -2066,9 +2066,27 @@ const useTransit = (ahead: MarkMode, fadeMs: number) => {
   }, [active, from, ahead, fadeMs]);
 };
 
+/**
+ * Leaves a transit page out of a PDF export, where it would only repeat its neighbour. The
+ * export renders every page into its own `.os-print-frame` (the framework's, in
+ * `export-pdf.ts`) and prints them all, so hiding the frame drops the page from the PDF.
+ */
+const PRINT_SKIP_CSS = `@media print { .os-print-frame:has(.aci-print-skip) { display: none !important; } }`;
+const PrintSkip = () => (
+  <>
+    <style>{PRINT_SKIP_CSS}</style>
+    <span className="aci-print-skip" hidden />
+  </>
+);
+
 const TitleSettled: Page = () => {
   useTransit('brand', 1000);
-  return <TitleBody mark="faint" />;
+  return (
+    <>
+      <PrintSkip />
+      <TitleBody mark="faint" />
+    </>
+  );
 };
 
 // ── 02 · review-mr ───────────────────────────────────────────────────────────
@@ -2350,7 +2368,8 @@ const gapAt = (deg: number) => (deg === -90 ? ARC_GAP.top : ARC_GAP.side);
  * Delays live on the revealed state only, so stepping back hides everything at once.
  * `will-change` keeps each ring on its own layer for good: otherwise Chrome drops the layer when
  * the transition ends and re-rasters the text snapped to the pixel grid, a visible 1px jump.
- * Once the second loop is up, the first dims so the new one has the focus.
+ * Once the second loop is up, the first dims so the new one has the focus; not in print, where
+ * a handout shows both at full strength.
  * `--wait` delays all of it when the step follows a demo cue (set in DEMO_CSS).
  */
 const HANDOFF_MS = 1100;
@@ -2389,6 +2408,9 @@ const LOOP_CSS = `
 @media (prefers-reduced-motion: reduce) {
   .aci-loops * { transition: none !important; }
 }
+@media print {
+  .aci-loops [data-osd-step]:has(~ [data-osd-step='revealed'] .aci-loop) .aci-loop { opacity: 1; }
+}
 `;
 
 /** One arc of a ring, from one step to the next, with its length known for the draw-in. */
@@ -2412,7 +2434,7 @@ const Arc = ({ from, to }: { from: number; to: number }) => {
  * A step on the ring. Its glow ring (`aci-glow`) is lit by the comet as it passes; the comet's
  * loop writes the opacity straight to the DOM, so the page never re-renders per frame.
  */
-const StepPill = ({ at, order, label, detail, who, glowRef }: LoopStep & { at: number; order: number; glowRef?: (el: SVGRectElement | null) => void }) => {
+const StepPill = ({ at, order, label, detail, who, gid, glowRef }: LoopStep & { at: number; order: number; gid: string; glowRef?: (el: SVGRectElement | null) => void }) => {
   const ring = onRing(at);
   const p = { x: Math.round(ring.x), y: Math.round(ring.y) };
   const box = { x: p.x - PILL.w / 2, y: p.y - PILL.h / 2, width: PILL.w, height: PILL.h, rx: PILL.h / 2 };
@@ -2420,7 +2442,7 @@ const StepPill = ({ at, order, label, detail, who, glowRef }: LoopStep & { at: n
     <g style={{ ['--i' as string]: order }}>
       {/* opaque underlay, so the comet passes behind the step rather than through its text */}
       <rect {...box} fill="#06164D" />
-      <rect {...box} fill={WHO_SKIN[who].fill} stroke={WHO_SKIN[who].stroke} strokeWidth={2} />
+      <rect {...box} fill={whoSkin(who, gid).fill} stroke={whoSkin(who, gid).stroke} strokeWidth={2} />
       <rect ref={glowRef} {...box} fill="rgba(255,255,255,0.08)" stroke="#FFFFFF" strokeWidth={2.5} opacity={0} filter="url(#aci-comet-glow)" />
       {/* centred in the pill; moves down a little to make room when the tab arrives */}
       <g className="aci-pill-text">
@@ -2431,7 +2453,7 @@ const StepPill = ({ at, order, label, detail, who, glowRef }: LoopStep & { at: n
           {detail}
         </text>
       </g>
-      <WhoTab who={who} x={p.x} y={box.y} />
+      <WhoTab who={who} gid={gid} x={p.x} y={box.y} />
     </g>
   );
 };
@@ -2441,11 +2463,15 @@ type Who = 'agent' | 'human' | 'both';
 type LoopStep = { label: string; detail: string; who: Who };
 
 // Agent = Leuchtblau, human = Leuchtgrün, together = both, blended across the pill.
-const WHO_SKIN: Record<Who, { fill: string; stroke: string }> = {
-  agent: { fill: 'rgba(45,93,255,0.22)', stroke: 'rgba(120,150,255,0.95)' },
-  human: { fill: 'rgba(125,244,129,0.16)', stroke: 'rgba(125,244,129,0.95)' },
-  both: { fill: 'url(#aci-both-fill)', stroke: 'url(#aci-both-stroke)' },
-};
+// Together's gradients live in each loop's own <defs>, under ids unique to that loop (`gid`):
+// a shared id resolves to its first copy in the document, and when the export prints every
+// page at once that copy sits where Chrome does not paint it, leaving the pill bare.
+const whoSkin = (who: Who, gid: string): { fill: string; stroke: string } =>
+  ({
+    agent: { fill: 'rgba(45,93,255,0.22)', stroke: 'rgba(120,150,255,0.95)' },
+    human: { fill: 'rgba(125,244,129,0.16)', stroke: 'rgba(125,244,129,0.95)' },
+    both: { fill: `url(#${gid}-both-fill)`, stroke: `url(#${gid}-both-stroke)` },
+  })[who];
 
 /**
  * Who, as a shape as well as a colour, so it reads on a washed-out projector and without colour
@@ -2479,35 +2505,38 @@ const WhoGlyphs = ({ who, x, y, size }: { who: Who; x: number; y: number; size: 
 };
 
 /** Who, as a small tab on the step's top edge: the glyphs in a capsule of the step's skin. */
-const WhoTab = ({ who, x, y }: { who: Who; x: number; y: number }) => {
+const WhoTab = ({ who, gid, x, y }: { who: Who; gid: string; x: number; y: number }) => {
   const w = who === 'both' ? 62 : 40;
   const box = { x: x - w / 2, y: y - 16, width: w, height: 32, rx: 16 };
   return (
     <g className="aci-tab">
       <rect {...box} fill="#06164D" />
-      <rect {...box} fill={WHO_SKIN[who].fill} stroke={WHO_SKIN[who].stroke} strokeWidth={2} />
+      <rect {...box} fill={whoSkin(who, gid).fill} stroke={whoSkin(who, gid).stroke} strokeWidth={2} />
       <WhoGlyphs who={who} x={who === 'both' ? x - 10.5 : x} y={y} size={18} />
     </g>
   );
 };
 
 /** The three kinds, as a small key; same pill shapes as the steps. */
-const WhoKey = ({ who, label, i }: { who: Who; label: string; i: number }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 14, ['--i' as string]: i }}>
-    <svg width={68} height={34} viewBox="0 0 68 34" aria-hidden="true">
-      <defs>
-        <linearGradient id={`aci-key-${who}`} x1="0" x2="1">
-          <stop offset="0%" stopColor="rgba(120,150,255,0.95)" />
-          <stop offset="100%" stopColor="rgba(125,244,129,0.95)" />
-        </linearGradient>
-      </defs>
-      <rect x={1.5} y={1.5} width={65} height={31} rx={15.5} fill={who === 'both' ? 'rgba(85,170,190,0.18)' : WHO_SKIN[who].fill}
-        stroke={who === 'both' ? `url(#aci-key-${who})` : WHO_SKIN[who].stroke} strokeWidth={2} />
-      <WhoGlyphs who={who} x={who === 'both' ? 23.5 : 34} y={17} size={18} />
-    </svg>
-    <span style={{ fontSize: 26, color: MUTED }}>{label}</span>
-  </div>
-);
+const WhoKey = ({ who, label, i }: { who: Who; label: string; i: number }) => {
+  const gid = useId().replace(/:/g, '');
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, ['--i' as string]: i }}>
+      <svg width={68} height={34} viewBox="0 0 68 34" aria-hidden="true">
+        <defs>
+          <linearGradient id={`${gid}-key`} x1="0" x2="1">
+            <stop offset="0%" stopColor="rgba(120,150,255,0.95)" />
+            <stop offset="100%" stopColor="rgba(125,244,129,0.95)" />
+          </linearGradient>
+        </defs>
+        <rect x={1.5} y={1.5} width={65} height={31} rx={15.5} fill={who === 'both' ? 'rgba(85,170,190,0.18)' : whoSkin(who, gid).fill}
+          stroke={who === 'both' ? `url(#${gid}-key)` : whoSkin(who, gid).stroke} strokeWidth={2} />
+        <WhoGlyphs who={who} x={who === 'both' ? 23.5 : 34} y={17} size={18} />
+      </svg>
+      <span style={{ fontSize: 26, color: MUTED }}>{label}</span>
+    </div>
+  );
+};
 
 /**
  * A comet runs the ring clockwise, one lap per `LAP_MS`, a fading trail behind it; each step
@@ -2524,6 +2553,7 @@ const Loop = ({ title, sub, steps, second }: { title: string; sub?: string; step
   const svg = useRef<SVGSVGElement | null>(null);
   const comet = useRef<SVGGElement | null>(null);
   const glows = useRef<(SVGRectElement | null)[]>([]);
+  const gid = useId().replace(/:/g, '');
   useEffect(() => {
     if (!active || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     let raf = 0;
@@ -2571,11 +2601,11 @@ const Loop = ({ title, sub, steps, second }: { title: string; sub?: string; step
         <marker id="aci-loop-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
           <path d="M 0 0 L 10 5 L 0 10 z" fill={MUTED} />
         </marker>
-        <linearGradient id="aci-both-stroke" x1="0" x2="1">
+        <linearGradient id={`${gid}-both-stroke`} x1="0" x2="1">
           <stop offset="0%" stopColor="rgba(120,150,255,0.95)" />
           <stop offset="100%" stopColor="rgba(125,244,129,0.95)" />
         </linearGradient>
-        <linearGradient id="aci-both-fill" x1="0" x2="1">
+        <linearGradient id={`${gid}-both-fill`} x1="0" x2="1">
           <stop offset="0%" stopColor="rgba(45,93,255,0.22)" />
           <stop offset="100%" stopColor="rgba(125,244,129,0.16)" />
         </linearGradient>
@@ -2607,9 +2637,9 @@ const Loop = ({ title, sub, steps, second }: { title: string; sub?: string; step
           {sub}
         </text>
       ) : null}
-      <StepPill at={ANGLES[0]} order={0} {...steps[0]} glowRef={(el) => (glows.current[0] = el)} />
-      <StepPill at={ANGLES[1]} order={1} {...steps[1]} glowRef={(el) => (glows.current[1] = el)} />
-      <StepPill at={ANGLES[2]} order={2} {...steps[2]} glowRef={(el) => (glows.current[2] = el)} />
+      <StepPill at={ANGLES[0]} order={0} {...steps[0]} gid={gid} glowRef={(el) => (glows.current[0] = el)} />
+      <StepPill at={ANGLES[1]} order={1} {...steps[1]} gid={gid} glowRef={(el) => (glows.current[1] = el)} />
+      <StepPill at={ANGLES[2]} order={2} {...steps[2]} gid={gid} glowRef={(el) => (glows.current[2] = el)} />
     </svg>
   );
 };
@@ -3426,7 +3456,12 @@ const Tech: Page = () => <TechBody stepped mark="faint" />;
 /** Transit, like `TitleSettled`: the watermark fades out here, then the close follows. */
 const TechSettled: Page = () => {
   useTransit('faint', 700);
-  return <TechBody stepped={false} mark="none" />;
+  return (
+    <>
+      <PrintSkip />
+      <TechBody stepped={false} mark="none" />
+    </>
+  );
 };
 
 // ── 07 · Outro ───────────────────────────────────────────────────────────────

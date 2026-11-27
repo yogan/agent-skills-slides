@@ -13,6 +13,8 @@ to the artwork (the slidev master's version looks squished).
   with a synthetic `→`; arriving backward, it steps straight back. So one `→` on the title
   fades the logo, then lands on `/review-mr`.
 - Landing on a transit page directly (thumbnail click, deck opened there) does not move on.
+- A PDF export (toolbar → Export) is a handout: it leaves out both transit pages and shows the
+  first workflow loop at full strength, where the live deck dims it once the second arrives.
 - The rays in the background lean towards the mouse cursor. Park the cursor off the slide.
 - On the workflow pages a comet runs the current loop (the last one revealed) and lights the
   steps it passes; revealing the second sends one spark along the arrow. Only on the page
